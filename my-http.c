@@ -8,6 +8,7 @@
 #define MY_PORT 8080
 #define LISTEN_BACKLOG 5
 
+#define PRINT_USAGE() fprintf(stderr, "Usage: %s [-p port]\n", argv[0])
 #define handle_error(msg) do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 const char * prompt = "> ";
@@ -15,6 +16,8 @@ const char * helpMsg = "h - help\ni - request\nq - disconnect\nk - kill server\n
 const char * msg = "HTTP 1.0 \"200 OK\"\n";
 char buf[1];
 int bytesRecv;
+
+void parse_args(int argc, char *argv[]);
 
 void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr);
 void do_server_things(void);
@@ -24,6 +27,33 @@ int main(int argc, char *argv[])
 {
     do_server_things();
     exit(EXIT_SUCCESS);
+}
+
+void parse_args(int argc, char *argv[])
+{
+    if (argc < 2)
+    {
+        PRINT_USAGE();
+        exit(EXIT_FAILURE);
+    }
+
+    int opt;
+    while ((opt = getopt(argc, argv, "hn:p:")) != -1) {
+        switch (opt){
+        case 'h':
+            PRINT_USAGE();
+            exit(EXIT_SUCCESS);
+        case 'n':
+            printf("%s\n", optarg);
+            break;
+        case 'p':
+            printf("port number: %s\n", optarg);
+            break;
+        default: /* '?' */
+            PRINT_USAGE();
+            exit(EXIT_FAILURE);
+        }
+    }
 }
 
 void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr)
