@@ -60,7 +60,10 @@ void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr)
 {
     if ((*my_sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
         handle_error("socket");
-    printf("Socket created: %d\n\n", *my_sockfd);
+    printf("Socket created: fd%d\n\n", *my_sockfd);
+
+    int yes = 1;
+    setsockopt(*my_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 
     my_addr->sin_family = AF_INET;
     my_addr->sin_port = htons(MY_PORT);
