@@ -12,16 +12,12 @@
 #include <stdbool.h>
 
 #include "utils.h"
+#include "messages.h"
 
 #define MY_PORT 8080
 #define LISTEN_BACKLOG 5
 
 #define RECV_BUF_MAX 10
-
-const char * prompt = "> ";
-const char * helloMsg = "Hello, my name is server :-)\n";
-const char * helpMsg = "h - help\ni - request\nq - disconnect\nk - kill server\n";
-const char * msg = "HTTP 1.0 \"200 OK\"\n";
 
 char recv_buf[RECV_BUF_MAX];
 int bytesRecv;
