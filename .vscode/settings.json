@@ -5,6 +5,8 @@
         "netdb.h": "c",
         "stdio.h": "c",
         "utils.h": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "server.h": "c",
+        "messages.h": "c"
     }
 }

@@ -1,0 +1,66 @@
+#include <netinet/in.h>
+#include <stdbool.h>
+
+#include "socket_comm.h"
+#include "utils.h"
+#include "messages.h"
+
+int bytes_recv;
+
+void socket_transmit(int sockfd, const char * msg)
+{
+    if (send(sockfd, msg, strlen(msg), 0) == -1)
+        handle_error("send");
+    
+    /* send prompt only after sending the message */
+    if (send(sockfd, PROMPT, strlen(PROMPT), 0) == -1)
+        handle_error("send");
+}
+
+/** 
+    if there are excessive bytes,
+    discard them and write legal bytes into final_msg
+**/
+int socket_receive(int sockfd, char * msg, size_t len)
+{
+    bool excess_bytes_discarded = false;
+    bool timeout = false;
+
+    char final_msg[len];
+    memset(final_msg, '\0', len);
+
+    memset(msg, '\0', len);
+    if ((bytes_recv = recv(sockfd, msg, len, 0)) == -1) {
+        handle_error("recv");
+    }
+
+    memcpy(final_msg, msg, len);
+    remove_trailing_newline(final_msg);
+    printf("Message received: %s\n", final_msg);
+
+    // return if msg ends with newline or if there is a null terminator in msg
+    if (msg[len - 1] == '\n')
+        return bytes_recv;
+    for (size_t i = 0; i < len; i++)
+    {
+        if (msg[i] == '\0')
+            return bytes_recv;
+    }
+
+    while (!excess_bytes_discarded)
+    {
+        memset(msg, '\0', len);
+        if ((recv(sockfd, msg, len, 0)) == -1) {
+            handle_error("recv");
+        }
+
+        // do not exit while loop until there is null terminator in msg
+        for (size_t i = 0; i < len; i++)
+        {
+            if (msg[i] == '\0')
+                excess_bytes_discarded = true;
+        }
+    }
+    
+    return bytes_recv;
+}
