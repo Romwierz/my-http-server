@@ -1,5 +1,6 @@
 #include <netinet/in.h>
 #include <stdbool.h>
+#include <errno.h>
 
 #include "socket_comm.h"
 #include "utils.h"
@@ -49,9 +50,13 @@ int socket_receive(int sockfd, char * msg, size_t len)
 
     while (!excess_bytes_discarded)
     {
+        socket_set_timeout(sockfd, 0, 100);
+
         memset(msg, '\0', len);
         if ((recv(sockfd, msg, len, 0)) == -1) {
-            handle_error("recv");
+            // errno == 11 means that timeout has been reached
+            if (errno != 11)
+                handle_error("recv");
         }
 
         // do not exit while loop until there is null terminator in msg
@@ -60,7 +65,25 @@ int socket_receive(int sockfd, char * msg, size_t len)
             if (msg[i] == '\0')
                 excess_bytes_discarded = true;
         }
+
+        socket_disable_timeout(sockfd);
     }
     
     return bytes_recv;
+}
+
+void socket_set_timeout(int sockfd, int sec, int usec)
+{
+    struct timeval tv;
+    tv.tv_sec = sec;
+    tv.tv_usec = usec;
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
+}
+
+void socket_disable_timeout(int sockfd)
+{
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
 }

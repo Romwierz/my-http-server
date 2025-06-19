@@ -9,4 +9,7 @@
 void socket_transmit(int sockfd, const char * msg);
 int socket_receive(int sockfd, char * msg, size_t len);
 
+void socket_set_timeout(int sockfd, int sec, int usec);
+void socket_disable_timeout(int sockfd);
+
 #endif
