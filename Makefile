@@ -1,13 +1,18 @@
 CC = gcc
-CFLAGS = -Wall -g -std=gnu17 -fdiagnostics-color=always
+CFLAGS = -Wall -Wextra -Wno-unused-parameter -g -std=gnu17 -fdiagnostics-color=always
 
-all: my-http
+APP := my-http
 
-my-http: my-http.c
-	$(CC) $(CFLAGS) my-http.c -o my-http
+all: $(APP)
+
+$(APP): main.o utils.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+%.o: %.c
+	$(CC) $< -c $(CFLAGS) -o $@
 
 clean:
-	rm -f my-http
+	rm -f $(APP) *.o
 
 .PHONY: all clean
 

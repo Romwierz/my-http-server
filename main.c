@@ -11,11 +11,10 @@
 #include <errno.h>
 #include <stdbool.h>
 
+#include "utils.h"
+
 #define MY_PORT 8080
 #define LISTEN_BACKLOG 5
-
-#define PRINT_USAGE() fprintf(stderr, "Usage: %s [-p port]\n", argv[0])
-#define handle_error(msg) do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 #define RECV_BUF_MAX 10
 
@@ -27,46 +26,15 @@ const char * msg = "HTTP 1.0 \"200 OK\"\n";
 char recv_buf[RECV_BUF_MAX];
 int bytesRecv;
 
-void parse_args(int argc, char *argv[]);
-
 void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr);
 void do_server_things(void);
 void send_msg(const char * msg, int client_sockfd);
 int recv_msg(char * msg, size_t len, int client_sockfd);
 
-void remove_trailing_newline(char * str);
-
 int main(int argc, char *argv[])
 {
     do_server_things();
     exit(EXIT_SUCCESS);
-}
-
-void parse_args(int argc, char *argv[])
-{
-    if (argc < 2)
-    {
-        PRINT_USAGE();
-        exit(EXIT_FAILURE);
-    }
-
-    int opt;
-    while ((opt = getopt(argc, argv, "hn:p:")) != -1) {
-        switch (opt){
-        case 'h':
-            PRINT_USAGE();
-            exit(EXIT_SUCCESS);
-        case 'n':
-            printf("%s\n", optarg);
-            break;
-        case 'p':
-            printf("port number: %s\n", optarg);
-            break;
-        default: /* '?' */
-            PRINT_USAGE();
-            exit(EXIT_FAILURE);
-        }
-    }
 }
 
 void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr)
@@ -215,14 +183,4 @@ int recv_msg(char * msg, size_t len, int client_sockfd)
     }
     
     return bytesRecv;
-}
-
-void remove_trailing_newline(char * str)
-{
-    char trailing_char = str[strlen(str) - 1];
-    if (trailing_char == '\n')
-    {
-        trailing_char = '\0';
-        str[strlen(str) - 1] = trailing_char;
-    }
 }
