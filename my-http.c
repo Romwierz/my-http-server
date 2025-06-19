@@ -32,6 +32,9 @@ void parse_args(int argc, char *argv[]);
 void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr);
 void do_server_things(void);
 void send_msg(const char * msg, int client_sockfd);
+int recv_msg(char * msg, size_t len, int client_sockfd);
+
+void remove_trailing_newline(char * str);
 
 int main(int argc, char *argv[])
 {
@@ -109,12 +112,10 @@ void do_server_things(void)
             handle_error("accept");
         printf("Found connection: client fd%d\n\n", client_sockfd);
         send_msg(helloMsg, client_sockfd);
-
-        send_msg(prompt, client_sockfd);
-
-        while ((bytesRecv = recv(client_sockfd, buf, 1, 0)) != -1)
-        {
-            switch (buf[0])
+        
+        while (recv_msg(recv_buf, RECV_BUF_MAX, client_sockfd) != -1)
+        {            
+            switch (recv_buf[0])
             {
             case 'h':
                 send_msg(helpMsg, client_sockfd);
@@ -167,3 +168,61 @@ void send_msg(const char * msg, int client_sockfd)
 
 }
 
+/** 
+    if there are excessive bytes,
+    discard them and write legal bytes into final_msg
+**/
+int recv_msg(char * msg, size_t len, int client_sockfd)
+{
+    bool excess_bytes_discarded = false;
+
+    char final_msg[len];
+    memset(final_msg, '\0', len);
+
+    memset(msg, '\0', len);
+    if ((bytesRecv = recv(client_sockfd, msg, len, 0)) == -1) {
+        handle_error("recv");
+        return bytesRecv;
+    }
+
+    memcpy(final_msg, msg, len);
+    remove_trailing_newline(final_msg);
+    printf("Message received: %s\n", final_msg);
+
+    // return if msg ends with newline or if there is a null terminator in msg
+    if (msg[len - 1] == '\n')
+        return bytesRecv;
+    for (size_t i = 0; i < len; i++)
+    {
+        if (msg[i] == '\0')
+            return bytesRecv;
+    }
+
+    while (!excess_bytes_discarded)
+    {
+        memset(msg, '\0', len);
+        if ((bytesRecv = recv(client_sockfd, msg, len, 0)) == -1) {
+            handle_error("recv");
+            return bytesRecv;
+        }
+
+        // do not exit while loop until there is null terminator in msg
+        for (size_t i = 0; i < len - 1; i++)
+        {
+            if (msg[i] == '\0')
+                excess_bytes_discarded = true;
+        }
+    }
+    
+    return bytesRecv;
+}
+
+void remove_trailing_newline(char * str)
+{
+    char trailing_char = str[strlen(str) - 1];
+    if (trailing_char == '\n')
+    {
+        trailing_char = '\0';
+        str[strlen(str) - 1] = trailing_char;
+    }
+}
