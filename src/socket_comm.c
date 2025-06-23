@@ -48,26 +48,28 @@ int socket_receive(int sockfd, char * msg, size_t len)
             return bytes_recv;
     }
 
+    socket_set_timeout(sockfd, 0, 100);
     while (!excess_bytes_discarded)
     {
-        socket_set_timeout(sockfd, 0, 100);
+        int excess_bytes_recv;
 
-        memset(msg, '\0', len);
-        if ((recv(sockfd, msg, len, 0)) == -1) {
+        if ((excess_bytes_recv = recv(sockfd, msg, len, 0)) == -1) {
             // errno == 11 means that timeout has been reached
-            if (errno != 11)
+            if (errno == 11)
+                excess_bytes_discarded = true;
+            else
                 handle_error("recv");
         }
 
         // do not exit while loop until there is null terminator in msg
-        for (size_t i = 0; i < len; i++)
+        // but check only received bytes
+        for (int i = 0; i < excess_bytes_recv; i++)
         {
             if (msg[i] == '\0')
                 excess_bytes_discarded = true;
         }
-
-        socket_disable_timeout(sockfd);
     }
+    socket_disable_timeout(sockfd);
     
     return bytes_recv;
 }
