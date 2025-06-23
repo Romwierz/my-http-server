@@ -8,6 +8,7 @@
 
 // extra character for null terminator
 char recv_buf[RECV_BUF_MAX + 1];
+char recv_trash_buf[RECV_BUF_MAX + 1];
 int bytes_recv;
 
 void socket_transmit(int sockfd, const char * msg)
@@ -22,43 +23,24 @@ void socket_transmit(int sockfd, const char * msg)
 
 /** 
     if there are excessive bytes,
-    discard them and write legal bytes into final_msg
+    just read them into recv_trash_buf
 **/
-int socket_receive(int sockfd, char * msg, size_t len)
+int socket_receive(int sockfd, char *recv_buf, size_t buf_size)
 {
     bool excess_bytes_discarded = false;
-    bool timeout = false;
 
-    char final_msg[len];
-    memset(final_msg, '\0', len);
-
-    memset(msg, '\0', len);
-    if ((bytes_recv = recv(sockfd, msg, len, 0)) == -1) {
+    memset(recv_buf, '\0', buf_size);
+    if ((bytes_recv = recv(sockfd, recv_buf, buf_size, 0)) == -1) {
         handle_error("recv");
     }
 
-    memcpy(final_msg, msg, len);
-    remove_trailing_newline(final_msg);
-    printf("Message received: %s\n", final_msg);
+    remove_trailing_newline(recv_buf, buf_size);
+    printf("Data received: %s\n", recv_buf);
 
-    // return if msg ends with newline (and check if there is any excessive data)
-    if (msg[len - 1] == '\n') {
-        socket_set_timeout(sockfd, 0, 100);
-        if (recv(sockfd, msg, len, 0) == -1) {
-            // errno == 11 means that timeout has been reached
-            if (errno == 11) {
-                socket_disable_timeout(sockfd);
-                return bytes_recv;
-            }
-            else
-                handle_error("recv");            
-        }
-        socket_disable_timeout(sockfd);
-    }
-    // or if there is a null terminator in msg
-    for (size_t i = 0; i < len; i++)
+    // return if there is a null terminator in recv_buf
+    for (size_t i = 0; i < buf_size; i++)
     {
-        if (msg[i] == '\0')
+        if (recv_buf[i] == '\0')
             return bytes_recv;
     }
 
@@ -67,19 +49,21 @@ int socket_receive(int sockfd, char * msg, size_t len)
     {
         int excess_bytes_recv;
 
-        if ((excess_bytes_recv = recv(sockfd, msg, len, 0)) == -1) {
+        if ((excess_bytes_recv = recv(sockfd, recv_trash_buf, buf_size, 0)) == -1) {
             // errno == 11 means that timeout has been reached
-            if (errno == 11)
+            if (errno == 11) {
                 excess_bytes_discarded = true;
+                break;
+            }
             else
                 handle_error("recv");            
         }
 
-        // do not exit while loop until there is null terminator in msg
+        // do not exit while loop until there is null terminator in recv_trash_buf
         // but check only received bytes
         for (int i = 0; i < excess_bytes_recv; i++)
         {
-            if (msg[i] == '\0')
+            if (recv_trash_buf[i] == '\0')
                 excess_bytes_discarded = true;
         }
     }

@@ -11,7 +11,7 @@
 extern char recv_buf[RECV_BUF_MAX + 1];
 
 void socket_transmit(int sockfd, const char * msg);
-int socket_receive(int sockfd, char * msg, size_t len);
+int socket_receive(int sockfd, char * recv_buf, size_t buf_size);
 
 void socket_set_timeout(int sockfd, int sec, int usec);
 void socket_disable_timeout(int sockfd);
