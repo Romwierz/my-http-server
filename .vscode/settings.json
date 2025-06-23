@@ -7,6 +7,7 @@
         "utils.h": "c",
         "cstdlib": "c",
         "server.h": "c",
-        "messages.h": "c"
+        "messages.h": "c",
+        "unistd.h": "c"
     }
 }

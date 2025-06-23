@@ -4,16 +4,19 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <errno.h>
-#include <stdbool.h>
 
 #include "server.h"
 #include "utils.h"
 #include "messages.h"
 #include "socket_comm.h"
+#include "request.h"
 
 #define MY_PORT 8080U
 #define LISTEN_BACKLOG 5
 #define RECV_BUF_MAX 10
+
+bool kill_server = false;
+bool disconnect_client = false;
 
 char recv_buf[RECV_BUF_MAX];
 
@@ -41,9 +44,6 @@ void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr)
 
 void do_server_things(void)
 {
-    bool kill_server = false;
-    bool disconnect_client = false;
-
     int my_sockfd, client_sockfd;
     struct sockaddr_in my_addr, client_addr;
     socklen_t addr_size;
@@ -63,29 +63,7 @@ void do_server_things(void)
         
         while (socket_receive(client_sockfd, recv_buf, RECV_BUF_MAX) != -1)
         {            
-            switch (recv_buf[0])
-            {
-            case 'h':
-                socket_transmit(client_sockfd, HELP_MSG);
-                printf("Help message sent to client fd%d!\n\n", client_sockfd);
-                break;
-            case 'i':
-                socket_transmit(client_sockfd, MSG);
-                printf("Message sent to client fd%d\n\n", client_sockfd);
-                break;
-            case 'q':
-                disconnect_client = true;
-                printf("Disconnected with client fd%d\n\n", client_sockfd);
-                break;
-            case 'k':
-                kill_server = true;
-                printf("\nServer killed...\n");
-                break;
-            default:
-                socket_transmit(client_sockfd, "");
-                printf("Empty message sent to client fd%d\n\n", client_sockfd);
-                break;
-            }
+            handle_request(recv_buf, client_sockfd);
 
             if (kill_server || disconnect_client) {
                 if (close(client_sockfd) == -1)
