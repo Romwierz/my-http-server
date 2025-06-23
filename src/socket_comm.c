@@ -6,6 +6,8 @@
 #include "utils.h"
 #include "messages.h"
 
+// extra character for null terminator
+char recv_buf[RECV_BUF_MAX + 1];
 int bytes_recv;
 
 void socket_transmit(int sockfd, const char * msg)

@@ -13,12 +13,9 @@
 
 #define MY_PORT 8080U
 #define LISTEN_BACKLOG 5
-#define RECV_BUF_MAX 10
 
 bool kill_server = false;
 bool disconnect_client = false;
-
-char recv_buf[RECV_BUF_MAX];
 
 void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr)
 {
@@ -61,7 +58,7 @@ void do_server_things(void)
         printf("Found connection: client fd%d\n\n", client_sockfd);
         socket_transmit(client_sockfd, HELLO_MSG);
         
-        while (socket_receive(client_sockfd, recv_buf, RECV_BUF_MAX) != -1)
+        while (socket_receive(client_sockfd, recv_buf, sizeof(recv_buf) - 1) != -1)
         {            
             handle_request(recv_buf, client_sockfd);
 
