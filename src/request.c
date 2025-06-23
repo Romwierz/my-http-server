@@ -6,6 +6,14 @@
 #include "socket_comm.h"
 #include "messages.h"
 
+enum Request_type {
+	CMD, HTTP, INVALID
+};
+
+enum Cmd_request_type {
+	HELP, MESSAGE, DISCONNECT, KILL_SERVER, EMPTY
+};
+
 void handle_request(char *request, int sockfd)
 {
     switch (request[0])
