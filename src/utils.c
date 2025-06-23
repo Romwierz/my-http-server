@@ -33,12 +33,13 @@ void parse_args(int argc, char *argv[])
     }
 }
 
-void remove_trailing_newline(char * str)
+void remove_trailing_newline(char * str, size_t max_len)
 {
-    char trailing_char = str[strlen(str) - 1];
-    if (trailing_char == '\n')
-    {
-        trailing_char = '\0';
-        str[strlen(str) - 1] = trailing_char;
-    }
+    size_t real_len = strlen(str);
+    if (real_len > max_len)
+        real_len = max_len;
+
+    // if last character of string is '\n' replace it with '\0'
+    if (real_len > 0 && str[real_len - 1] == '\n')
+        str[real_len - 1] = '\0';
 }
