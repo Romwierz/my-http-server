@@ -39,9 +39,21 @@ int socket_receive(int sockfd, char * msg, size_t len)
     remove_trailing_newline(final_msg);
     printf("Message received: %s\n", final_msg);
 
-    // return if msg ends with newline or if there is a null terminator in msg
-    if (msg[len - 1] == '\n')
-        return bytes_recv;
+    // return if msg ends with newline (and check if there is any excessive data)
+    if (msg[len - 1] == '\n') {
+        socket_set_timeout(sockfd, 0, 100);
+        if (recv(sockfd, msg, len, 0) == -1) {
+            // errno == 11 means that timeout has been reached
+            if (errno == 11) {
+                socket_disable_timeout(sockfd);
+                return bytes_recv;
+            }
+            else
+                handle_error("recv");            
+        }
+        socket_disable_timeout(sockfd);
+    }
+    // or if there is a null terminator in msg
     for (size_t i = 0; i < len; i++)
     {
         if (msg[i] == '\0')
@@ -58,7 +70,7 @@ int socket_receive(int sockfd, char * msg, size_t len)
             if (errno == 11)
                 excess_bytes_discarded = true;
             else
-                handle_error("recv");
+                handle_error("recv");            
         }
 
         // do not exit while loop until there is null terminator in msg
