@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "utils.h"
 
@@ -42,4 +43,11 @@ void remove_trailing_newline(char * str, size_t max_len)
     // if last character of string is '\n' replace it with '\0'
     if (real_len > 0 && str[real_len - 1] == '\n')
         str[real_len - 1] = '\0';
+}
+
+char *remove_leading_whitespaces(char *str)
+{
+  while(isspace((unsigned char)*str)) str++;
+
+  return str;
 }
