@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "request.h"
 #include "server.h"
 #include "socket_comm.h"
 #include "messages.h"
+#include "utils.h"
 
 enum Request_type {
 	CMD, HTTP, INVALID
@@ -31,7 +33,19 @@ static enum Cmd_request_type parse_cmd_request(char *request)
     }
 }
 
-static void response(enum Request_type req_type, enum Cmd_request_type cmd_req_type, int sockfd)
+static int parse_http_request(char *request)
+{
+    char *new_location = remove_leading_whitespaces(request);
+    if (new_location != NULL)
+        request = new_location;
+    
+    if (strncmp("GET", request, sizeof("GET")) == 0)
+        return 200;
+    
+    return 400;
+}
+
+static void cmd_response(enum Cmd_request_type cmd_req_type, int sockfd)
 {
     switch (cmd_req_type)
     {
@@ -40,7 +54,7 @@ static void response(enum Request_type req_type, enum Cmd_request_type cmd_req_t
         printf("Help message sent to client fd%d!\n\n", sockfd);
         break;
     case MESSAGE:
-        socket_transmit(sockfd, MSG);
+        socket_transmit(sockfd, HTTP_STATUS_200);
         printf("Message sent to client fd%d\n\n", sockfd);
         break;
     case DISCONNECT:
@@ -58,20 +72,29 @@ static void response(enum Request_type req_type, enum Cmd_request_type cmd_req_t
     }
 }
 
-void handle_request(char *request, int sockfd)
+static void http_response(int status_code, int sockfd)
 {
-    // Request_type req_type = get_req_type();
-    enum Request_type req_type = CMD;
-    enum Cmd_request_type cmd_req_type;
-
-    switch (req_type)
+    switch (status_code)
     {
-    case CMD:
-        cmd_req_type = parse_cmd_request(request);
+    case 200:
+        socket_transmit(sockfd, HTTP_STATUS_200);
+        break;
+    case 400:
+        socket_transmit(sockfd, HTTP_STATUS_400);
+        break;
+    case 404:
+        socket_transmit(sockfd, HTTP_STATUS_404);
         break;
     default:
         break;
     }
 
-    response(req_type, cmd_req_type, sockfd);
+    printf("HTTP response %d sent to client fd%d\n\n", status_code, sockfd);
+}
+
+void handle_request(char *request, int sockfd)
+{
+    int status_code = parse_http_request(request);
+
+    http_response(status_code, sockfd);
 }
