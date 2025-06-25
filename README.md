@@ -1,6 +1,6 @@
 # My HTTP server
 
-Simple HTTP server for science. Also handles some commands.
+Simple HTTP server for science.
 
 ```
 # Build or clean
@@ -11,5 +11,7 @@ $ make clean
 $ ./my-http
 
 # Test
-$ nc 127.0.0.1 8080
+$ curl -i 127.0.0.1:8080
+# or
+$ curl -v 127.0.0.1:8080
 ```
