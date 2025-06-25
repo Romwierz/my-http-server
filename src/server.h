@@ -5,7 +5,6 @@
 #include <netinet/in.h>
 
 extern bool kill_server;
-extern bool disconnect_client;
 
 void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr);
 void do_server_things(void);

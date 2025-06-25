@@ -15,10 +15,6 @@ void socket_transmit(int sockfd, const char * msg)
 {
     if (send(sockfd, msg, strlen(msg), 0) == -1)
         handle_error("send");
-    
-    /* send prompt only after sending the message */
-    if (send(sockfd, PROMPT, strlen(PROMPT), 0) == -1)
-        handle_error("send");
 }
 
 /** 
@@ -34,7 +30,6 @@ int socket_receive(int sockfd, char *recv_buf, size_t buf_size)
         handle_error("recv");
     }
 
-    remove_trailing_newline(recv_buf, buf_size);
     printf("Data received: %s\n", recv_buf);
 
     // return if there is a null terminator in recv_buf

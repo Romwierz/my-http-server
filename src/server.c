@@ -15,7 +15,6 @@
 #define LISTEN_BACKLOG 5
 
 bool kill_server = false;
-bool disconnect_client = false;
 
 void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr)
 {
@@ -36,7 +35,6 @@ void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr)
 
     if (listen(*my_sockfd, LISTEN_BACKLOG) == -1)
         handle_error("listen");
-    printf("Server listening...\n\n");
 }
 
 void do_server_things(void)
@@ -51,23 +49,17 @@ void do_server_things(void)
 
     while (1)
     {
-        disconnect_client = false;
+        printf("Server listening...\n");
 
         if ((client_sockfd = accept(my_sockfd, (struct sockaddr *)&client_addr, &addr_size)) == -1)
             handle_error("accept");
         printf("Found connection: client fd%d\n\n", client_sockfd);
-        socket_transmit(client_sockfd, HELLO_MSG);
         
-        while (socket_receive(client_sockfd, recv_buf, sizeof(recv_buf) - 1) != -1)
-        {            
+        if (socket_receive(client_sockfd, recv_buf, sizeof(recv_buf) - 1) != -1)
             handle_request(recv_buf, client_sockfd);
 
-            if (kill_server || disconnect_client) {
-                if (close(client_sockfd) == -1)
-                    handle_error("close client_sockfd");
-                break;
-            }
-        }
+        if (close(client_sockfd) == -1)
+            handle_error("close client_sockfd");
 
         if (kill_server)
             break;
