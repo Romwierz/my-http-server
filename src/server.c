@@ -49,7 +49,7 @@ void do_server_things(void)
 
     while (1)
     {
-        printf("Server listening...\n");
+        printf(ANSI_COLOR_CYAN "Server listening..." ANSI_COLOR_RESET "\n");
 
         if ((client_sockfd = accept(my_sockfd, (struct sockaddr *)&client_addr, &addr_size)) == -1)
             handle_error("accept");

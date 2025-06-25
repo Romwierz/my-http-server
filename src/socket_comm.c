@@ -30,7 +30,7 @@ int socket_receive(int sockfd, char *recv_buf, size_t buf_size)
         handle_error("recv");
     }
 
-    printf("Data received: %s\n", recv_buf);
+    printf("Data received:\n%s", recv_buf);
 
     // return if there is a null terminator in recv_buf
     for (size_t i = 0; i < buf_size; i++)
