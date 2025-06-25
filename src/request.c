@@ -9,6 +9,9 @@
 #include "messages.h"
 #include "utils.h"
 
+char file_content_buf[1024];
+long bytes_in_file;
+
 static int parse_http_request(char *request)
 {
     char req_line[30] = { 0 };
@@ -68,10 +71,28 @@ static int parse_http_request(char *request)
     printf("uri: %s\n", uri);
     printf("version: %s\n", version);
 
-    if (strncmp("GET", method, sizeof("GET")) == 0)
-        return 200;
+    if (strncmp("GET", method, sizeof("GET")) != 0)
+        return 400;
     
-    return 400;
+    FILE *fp;
+    fp = fopen("www/index.html", "r");
+
+    /* get the number of bytes */
+    fseek(fp, 0L, SEEK_END);
+    bytes_in_file = ftell(fp);
+
+    if (bytes_in_file > (long)sizeof(file_content_buf))
+        bytes_in_file = (long)sizeof(file_content_buf);
+
+    /* reset the file position indicator to
+    the beginning of the file */
+    fseek(fp, 0L, SEEK_SET);
+
+    /* copy all the text into the buffer */
+    fread(file_content_buf, sizeof(char), bytes_in_file, fp);
+    fclose(fp);
+
+    return 200;
 }
 
 static void http_response(int status_code, int sockfd)
@@ -80,6 +101,8 @@ static void http_response(int status_code, int sockfd)
     {
     case 200:
         socket_transmit(sockfd, HTTP_STATUS_200);
+        socket_transmit(sockfd, "\r\n");
+        socket_transmit(sockfd, file_content_buf);
         break;
     case 400:
         socket_transmit(sockfd, HTTP_STATUS_400);

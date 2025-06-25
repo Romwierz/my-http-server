@@ -6,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define RECV_BUF_MAX 100
+#define RECV_BUF_MAX 1024
 
 extern char recv_buf[RECV_BUF_MAX + 1];
 
