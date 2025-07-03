@@ -14,17 +14,18 @@ long bytes_in_file;
 
 static int parse_http_request(char *request)
 {
-    char req_line[30] = { 0 };
-    char method[10] = { 0 };
-    char uri[10] = { 0 };
-    char version[10] = { 0 };
-    
+    char req_line[50] = { 0 };
+    char method[30] = { 0 };
+    char uri[30] = { 0 };
+    char version[30] = { 0 };
+
     char *next_element;
-    int element_size = 0;
+    size_t element_size = 0;
+    size_t max_element_size = 0;
     int element_cnt = 0;
     bool req_line_end = false;
     
-    for (size_t i = 0; i < strlen(request); i++)
+    for (size_t i = 0; i < sizeof(req_line) - 1; i++)
     {
         req_line[i] = request[i];
         if (request[i - 1] == '\r' && request[i] == '\n') {
@@ -49,12 +50,22 @@ static int parse_http_request(char *request)
             switch (element_cnt)
             {
             case 1:
+                max_element_size = sizeof(method) - 1;
+                if (element_size > max_element_size)
+                    element_size = max_element_size;
                 memccpy(method, next_element, ' ', element_size);
                 break;
             case 2:
+                max_element_size = sizeof(method) - 1;
+                // implement 414 Request-URI Too Long
+                if (element_size > max_element_size)
+                    element_size = max_element_size;
                 memccpy(uri, next_element, ' ', element_size);
                 break;
             case 3:
+                max_element_size = sizeof(method) - 1;
+                if (element_size > max_element_size)
+                    element_size = max_element_size;
                 memccpy(version, next_element, ' ', element_size);
                 break;
             default:
@@ -66,17 +77,18 @@ static int parse_http_request(char *request)
         if (req_line_end)
             break;
     } while (request++);
-    
+
     printf("method: %s\n", method);
     printf("uri: %s\n", uri);
     printf("version: %s\n", version);
 
     if (strncmp("GET", method, sizeof("GET")) != 0)
         return 400;
-    
-    FILE *fp;
-    fp = fopen("www/index.html", "r");
 
+    FILE *fp;
+    if ((fp = fopen("www/index.html", "r")) == NULL)
+        handle_error("fopen");
+    
     /* get the number of bytes */
     fseek(fp, 0L, SEEK_END);
     bytes_in_file = ftell(fp);
