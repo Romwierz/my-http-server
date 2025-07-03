@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include "request.h"
 #include "server.h"
@@ -9,15 +10,56 @@
 #include "messages.h"
 #include "utils.h"
 
+int status_code;
+
 char file_content_buf[1024];
 long bytes_in_file;
 
+static void read_file(const char *uri)
+{
+    // if (uri[0] == '/')
+    //     strcpy(uri, "www/index.html");
+    
+    if (strcmp("/", uri) == 0 || strcmp("/index.html", uri) == 0)
+        strcpy(uri, "www/index.html");
+
+    FILE *fp;
+    if ((fp = fopen(uri, "r")) == NULL) {
+        switch (errno)
+        {
+        case ENOENT: // No such file or directory
+            status_code = 404;
+            return;
+        case EACCES: // Permission denied
+            status_code = 403;
+            return;
+        default:
+            handle_error("fopen");
+        }   
+    }
+    
+    /* get the number of bytes */
+    fseek(fp, 0L, SEEK_END);
+    bytes_in_file = ftell(fp);
+
+    if (bytes_in_file > (long)sizeof(file_content_buf))
+        bytes_in_file = (long)sizeof(file_content_buf);
+
+    /* reset the file position indicator to
+    the beginning of the file */
+    fseek(fp, 0L, SEEK_SET);
+
+    /* copy all the text into the buffer */
+    fread(file_content_buf, sizeof(char), bytes_in_file, fp);
+    fclose(fp);
+}
+
 static int parse_http_request(char *request)
 {
-    char req_line[50] = { 0 };
-    char method[30] = { 0 };
-    char uri[30] = { 0 };
-    char version[30] = { 0 };
+    char req_line[150] = { 0 };
+    char method[50] = { 0 };
+    char uri[50] = { 0 };
+    char version[50] = { 0 };
 
     char *next_element;
     size_t element_size = 0;
@@ -83,28 +125,11 @@ static int parse_http_request(char *request)
     printf("version: %s\n", version);
 
     if (strncmp("GET", method, sizeof("GET")) != 0)
-        return 400;
+        return status_code = 400;
 
-    FILE *fp;
-    if ((fp = fopen("www/index.html", "r")) == NULL)
-        handle_error("fopen");
-    
-    /* get the number of bytes */
-    fseek(fp, 0L, SEEK_END);
-    bytes_in_file = ftell(fp);
+    read_file(uri);
 
-    if (bytes_in_file > (long)sizeof(file_content_buf))
-        bytes_in_file = (long)sizeof(file_content_buf);
-
-    /* reset the file position indicator to
-    the beginning of the file */
-    fseek(fp, 0L, SEEK_SET);
-
-    /* copy all the text into the buffer */
-    fread(file_content_buf, sizeof(char), bytes_in_file, fp);
-    fclose(fp);
-
-    return 200;
+    return status_code;
 }
 
 static void http_response(int status_code, int sockfd)
@@ -119,6 +144,9 @@ static void http_response(int status_code, int sockfd)
     case 400:
         socket_transmit(sockfd, HTTP_STATUS_400);
         break;
+    case 403:
+        socket_transmit(sockfd, HTTP_STATUS_403);
+        break;
     case 404:
         socket_transmit(sockfd, HTTP_STATUS_404);
         break;
@@ -131,7 +159,9 @@ static void http_response(int status_code, int sockfd)
 
 void handle_request(char *request, int sockfd)
 {
-    int status_code = parse_http_request(request);
+    status_code = 200;
+
+    status_code = parse_http_request(request);
 
     http_response(status_code, sockfd);
 }
