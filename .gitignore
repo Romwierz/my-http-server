@@ -1,3 +1,5 @@
 *.o
 *.d
 my-http
+nob
+nob.old

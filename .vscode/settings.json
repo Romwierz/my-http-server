@@ -8,6 +8,7 @@
         "cstdlib": "c",
         "server.h": "c",
         "messages.h": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "fcntl.h": "c"
     }
 }
