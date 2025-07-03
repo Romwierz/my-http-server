@@ -14,10 +14,13 @@ $(APP): $(OBJ)
 %.o: %.c
 	$(CC) $< -c $(CFLAGS) -o $@
 
+asan:
+	$(MAKE) CFLAGS="$(CFLAGS) -fsanitize=address -fno-omit-frame-pointer"
+ 
 clean:
 	rm -f $(APP) $(OBJ) $(DEP)
 
-.PHONY: all clean
+.PHONY: all clean asan
 
 .DELETE_ON_ERROR:
 
