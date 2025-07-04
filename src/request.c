@@ -27,6 +27,8 @@ long bytes_in_file;
 
 static void read_file(char *uri)
 {
+    memset(file_content_buf, '\0', sizeof(file_content_buf));
+
     if (strcmp("/", uri) == 0)
         strcpy(uri, "/index.html");
 
