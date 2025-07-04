@@ -12,6 +12,10 @@
 
 #define SERVER_ROOT "www"
 
+enum Http_method_t {
+    INVALID, GET, HEAD, POST, PUT, DELETE
+};
+
 int status_code;
 
 char file_content_buf[1024];
@@ -57,12 +61,29 @@ static void read_file(char *uri)
     fclose(fp);
 }
 
+static enum Http_method_t parse_http_method(char *method)
+{
+    if (strncmp("GET", method, sizeof("GET")) == 0)
+        return GET;
+    else if (strncmp("HEAD", method, sizeof("HEAD")) == 0)
+        return HEAD;
+    else if (strncmp("POST", method, sizeof("POST")) == 0)
+        return POST;
+    else if (strncmp("PUT", method, sizeof("PUT")) == 0)
+        return PUT;
+    else if (strncmp("DELETE", method, sizeof("DELETE")) == 0)
+        return DELETE;
+    
+    return INVALID;
+}
+
 static int parse_http_request(char *request)
 {
     char req_line[150] = { 0 };
     char method[50] = { 0 };
     char uri[50] = { 0 };
     char version[50] = { 0 };
+    enum Http_method_t method_type;
 
     char *next_element;
     size_t element_size = 0;
@@ -125,12 +146,20 @@ static int parse_http_request(char *request)
 
     printf("method: %s\n", method);
     printf("uri: %s\n", uri);
-    printf("version: %s\n", version);
+    printf("version: %s\n\n", version);
 
-    if (strncmp("GET", method, sizeof("GET")) != 0)
-        return status_code = 400;
-
-    read_file(uri);
+    switch (method_type = parse_http_method(method))
+    {
+    case GET:
+        read_file(uri);
+        break;
+    case INVALID:
+        status_code = 400;
+        break;
+    default:
+        status_code = 501;
+        break;
+    }
 
     return status_code;
 }
