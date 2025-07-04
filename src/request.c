@@ -150,6 +150,15 @@ static void http_response(int status_code, int sockfd)
     case 404:
         socket_transmit(sockfd, HTTP_STATUS_404);
         break;
+    case 413:
+        socket_transmit(sockfd, HTTP_STATUS_413);
+        break;
+    case 414:
+        socket_transmit(sockfd, HTTP_STATUS_414);
+        break;
+    case 501:
+        socket_transmit(sockfd, HTTP_STATUS_501);
+        break;
     default:
         break;
     }
