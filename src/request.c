@@ -12,6 +12,10 @@
 
 #define SERVER_ROOT "www"
 
+#define METHOD_SIZE_MAX     25
+#define URI_SIZE_MAX        100
+#define VERSION_SIZE_MAX    25
+
 enum Http_method_t {
     INVALID, GET, HEAD, POST, PUT, DELETE
 };
@@ -77,61 +81,49 @@ static enum Http_method_t parse_http_method(char *method)
     return INVALID;
 }
 
-static int parse_http_request(char *request)
+/*
+    retrieve http request line elements,
+*/
+static void parse_http_req_line(const char *const req_line, char *method, char *uri, char *version)
 {
-    char req_line[150] = { 0 };
-    char method[50] = { 0 };
-    char uri[50] = { 0 };
-    char version[50] = { 0 };
-    enum Http_method_t method_type;
-
     char *next_element;
     size_t element_size = 0;
-    size_t max_element_size = 0;
     int element_cnt = 0;
     bool req_line_end = false;
-    
-    for (size_t i = 0; i < sizeof(req_line) - 1; i++)
-    {
-        req_line[i] = request[i];
-        if (request[i - 1] == '\r' && request[i] == '\n') {
-            break;
-        }
-    }
-    printf("Request line: %s", req_line);
 
-    do
-    {   
-        if (*request == '\r' || *(request + 1) == '\n')
+    // each element of request line is separated by space,
+    // so the element is written into corresponding string when:
+    // - space or null occured
+    // - element size is greater than zero
+    for (size_t i = 0; i < strlen(req_line); i++)
+    {
+        if (i > 0 && req_line[i - 1] == '\r' && req_line[i] == '\n')
             req_line_end = true;
 
-        if (!isspace(*request) && element_size == 0)
-            next_element = request;
+        if (!isspace(req_line[i]) && element_size == 0)
+            next_element = (char *)&req_line[i];
         
-        if (!isspace(*request) && *request != '\0')
+        if (!isspace(req_line[i]))
             element_size++;
         
-        if ((isspace(*request) || req_line_end) && element_size > 0) {
+        if ((isspace(req_line[i]) || req_line_end) && element_size > 0) {
             element_cnt++;
             switch (element_cnt)
             {
             case 1:
-                max_element_size = sizeof(method) - 1;
-                if (element_size > max_element_size)
-                    element_size = max_element_size;
+                if (element_size > METHOD_SIZE_MAX)
+                    element_size = METHOD_SIZE_MAX;
                 memccpy(method, next_element, ' ', element_size);
                 break;
             case 2:
-                max_element_size = sizeof(method) - 1;
-                // implement 414 Request-URI Too Long
-                if (element_size > max_element_size)
-                    element_size = max_element_size;
+                // implement 414 req_line-URI Too Long
+                if (element_size > URI_SIZE_MAX)
+                    element_size = URI_SIZE_MAX;
                 memccpy(uri, next_element, ' ', element_size);
                 break;
             case 3:
-                max_element_size = sizeof(method) - 1;
-                if (element_size > max_element_size)
-                    element_size = max_element_size;
+                if (element_size > VERSION_SIZE_MAX)
+                    element_size = VERSION_SIZE_MAX;
                 memccpy(version, next_element, ' ', element_size);
                 break;
             default:
@@ -139,14 +131,31 @@ static int parse_http_request(char *request)
             }
             element_size = 0;
         }
-
-        if (req_line_end)
-            break;
-    } while (request++);
-
+    }
+    
     printf("method: %s\n", method);
     printf("uri: %s\n", uri);
     printf("version: %s\n\n", version);
+}
+
+static int parse_http_request(char *request)
+{
+    char req_line[150] = { 0 };
+    char method[50] = { 0 };
+    char uri[50] = { 0 };
+    char version[50] = { 0 };
+    enum Http_method_t method_type;
+    
+    for (size_t i = 0; i < sizeof(req_line) - 1; i++)
+    {
+        req_line[i] = request[i];
+        if (i > 0 && request[i - 1] == '\r' && request[i] == '\n') {
+            break;
+        }
+    }
+    printf("Request line: %s", req_line);
+
+    parse_http_req_line(req_line, method, uri, version);
 
     switch (method_type = parse_http_method(method))
     {
