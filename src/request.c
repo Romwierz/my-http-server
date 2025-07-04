@@ -10,21 +10,24 @@
 #include "messages.h"
 #include "utils.h"
 
+#define SERVER_ROOT "www"
+
 int status_code;
 
 char file_content_buf[1024];
 long bytes_in_file;
 
-static void read_file(const char *uri)
+static void read_file(char *uri)
 {
-    // if (uri[0] == '/')
-    //     strcpy(uri, "www/index.html");
-    
-    if (strcmp("/", uri) == 0 || strcmp("/index.html", uri) == 0)
-        strcpy(uri, "www/index.html");
+    if (strcmp("/", uri) == 0)
+        strcpy(uri, "/index.html");
+
+    // append uri to server root
+    char path[60] = SERVER_ROOT;
+    strcat(path, uri);
 
     FILE *fp;
-    if ((fp = fopen(uri, "r")) == NULL) {
+    if ((fp = fopen(path, "r")) == NULL) {
         switch (errno)
         {
         case ENOENT: // No such file or directory
