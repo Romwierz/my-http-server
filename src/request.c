@@ -20,6 +20,18 @@ enum Http_method_t {
     INVALID, GET, HEAD, POST, PUT, DELETE
 };
 
+struct Http_method_map_entry {
+    char *name;
+    enum Http_method_t type;
+} const http_method_map[] = {
+    { "GET", GET },
+    { "HEAD", HEAD },
+    { "POST", POST },
+    { "PUT", PUT },
+    { "DELETE", DELETE },
+    { 0, INVALID }
+};
+
 int status_code;
 
 char file_content_buf[1024];
@@ -67,20 +79,17 @@ static void read_file(char *uri)
     fclose(fp);
 }
 
+/*
+    map method name (input string) to enum representation using lookup table
+*/
 static enum Http_method_t parse_http_method(char *method)
-{
-    if (strncmp("GET", method, sizeof("GET")) == 0)
-        return GET;
-    else if (strncmp("HEAD", method, sizeof("HEAD")) == 0)
-        return HEAD;
-    else if (strncmp("POST", method, sizeof("POST")) == 0)
-        return POST;
-    else if (strncmp("PUT", method, sizeof("PUT")) == 0)
-        return PUT;
-    else if (strncmp("DELETE", method, sizeof("DELETE")) == 0)
-        return DELETE;
-    
-    return INVALID;
+{   
+    const struct Http_method_map_entry *entry;
+    for (entry = http_method_map; entry->name; entry++)
+        if (strncmp(entry->name, method, strlen(entry->name)) == 0)
+            break;
+        
+    return entry->type;
 }
 
 /*
