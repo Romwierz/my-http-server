@@ -6,11 +6,6 @@
 #include "utils.h"
 #include "messages.h"
 
-// extra character for null terminator
-char recv_buf[RECV_BUF_MAX + 1];
-char recv_trash_buf[RECV_BUF_MAX + 1];
-int bytes_recv;
-
 void socket_transmit(int sockfd, const char * msg)
 {
     if (send(sockfd, msg, strlen(msg), 0) == -1)
@@ -23,6 +18,8 @@ void socket_transmit(int sockfd, const char * msg)
 **/
 int socket_receive(int sockfd, char *recv_buf, size_t buf_size)
 {
+    char recv_trash_buf[RECV_BUF_MAX + 1];
+    int bytes_recv;
     bool excess_bytes_discarded = false;
 
     memset(recv_buf, '\0', buf_size);

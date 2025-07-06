@@ -8,8 +8,6 @@
 
 #define RECV_BUF_MAX 1024
 
-extern char recv_buf[RECV_BUF_MAX + 1];
-
 void socket_transmit(int sockfd, const char * msg);
 int socket_receive(int sockfd, char * recv_buf, size_t buf_size);
 

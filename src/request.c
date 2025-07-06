@@ -32,13 +32,12 @@ struct Http_method_map_entry {
     { 0, INVALID }
 };
 
-int status_code;
-
 char file_content_buf[1024];
-long bytes_in_file;
 
-static void read_file(char *uri)
+static int read_file(char *uri)
 {
+    long bytes_in_file;
+    
     memset(file_content_buf, '\0', sizeof(file_content_buf));
 
     if (strcmp("/", uri) == 0)
@@ -53,11 +52,9 @@ static void read_file(char *uri)
         switch (errno)
         {
         case ENOENT: // No such file or directory
-            status_code = 404;
-            return;
+            return 404;
         case EACCES: // Permission denied
-            status_code = 403;
-            return;
+            return 403;
         default:
             handle_error("fopen");
         }   
@@ -77,6 +74,8 @@ static void read_file(char *uri)
     /* copy all the text into the buffer */
     fread(file_content_buf, sizeof(char), bytes_in_file, fp);
     fclose(fp);
+
+    return 200;
 }
 
 /*
@@ -151,6 +150,8 @@ static void parse_http_req_line(const char *const req_line, char *method, char *
 
 static int parse_http_request(char *request)
 {
+    int status_code = 200;
+
     char req_line[150] = { 0 };
     char method[50] = { 0 };
     char uri[50] = { 0 };
@@ -171,7 +172,7 @@ static int parse_http_request(char *request)
     switch (method_type = parse_http_method(method))
     {
     case GET:
-        read_file(uri);
+        status_code = read_file(uri);
         break;
     case INVALID:
         status_code = 400;
@@ -220,9 +221,7 @@ static void http_response(int status_code, int sockfd)
 
 void handle_request(char *request, int sockfd)
 {
-    status_code = 200;
-
-    status_code = parse_http_request(request);
+    int status_code = parse_http_request(request);
 
     http_response(status_code, sockfd);
 }

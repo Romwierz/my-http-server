@@ -39,6 +39,9 @@ void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr)
 
 void do_server_things(void)
 {
+    // extra character for null terminator
+    char recv_buf[RECV_BUF_MAX + 1] = { 0 };
+
     int my_sockfd, client_sockfd;
     struct sockaddr_in my_addr, client_addr;
     socklen_t addr_size;
