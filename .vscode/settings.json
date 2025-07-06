@@ -9,6 +9,7 @@
         "server.h": "c",
         "messages.h": "c",
         "unistd.h": "c",
-        "fcntl.h": "c"
+        "fcntl.h": "c",
+        "socket_comm.h": "c"
     }
 }

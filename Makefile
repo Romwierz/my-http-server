@@ -1,5 +1,13 @@
 CC = gcc
-CFLAGS = -MMD -Wall -Wextra -Wno-unused-parameter -g -std=gnu17 -fdiagnostics-color=always
+CFLAGS = -MMD -g -std=gnu17 -fdiagnostics-color=always
+# Warnings
+CFLAGS += -Wall -Wextra -Wpedantic \
+          -Wformat=2 -Wno-unused-parameter -Wshadow \
+          -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
+          -Wredundant-decls -Wnested-externs -Wmissing-include-dirs
+ifeq ($(CC),gcc)
+    CFLAGS += -Wjump-misses-init -Wlogical-op
+endif
 
 APP := my-http
 SRC := $(wildcard src/*.c)
