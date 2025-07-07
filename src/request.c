@@ -69,7 +69,6 @@ static bool uri_is_within_root(const char *uri)
         
         if (strncmp("/..", uri, 3) == 0)
         {
-            goto_parent_dir++;
             uri += 3;
             if (uri[0] == '/' || uri[0] == '\0')
                 goto_parent_dir++;
@@ -113,6 +112,8 @@ static int read_file(char *uri)
             return 404;
         case EACCES: // Permission denied
             return 403;
+        case ENOTDIR: // Not a directory
+            return 404;
         default:
             handle_error("fopen");
         }   
