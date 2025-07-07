@@ -49,8 +49,51 @@ static bool path_is_file(const char *path)
         return false;
 }
 
+static bool uri_is_within_root(const char *uri)
+{
+    int goto_parent_dir = 0, goto_subdir = 0;
+
+    for (; uri[0] != '\0'; uri++)
+    {
+        // parent dir access cannot be higher than subdir access at any moment
+        if (goto_parent_dir > goto_subdir)
+            return false;
+        
+        // do not allow spaces in uri
+        if (isspace(uri[0]))
+            return false;
+                
+        // skip redundant slashes
+        if (strncmp("//", uri, 2) == 0)
+            continue;
+        
+        if (strncmp("/..", uri, 3) == 0)
+        {
+            goto_parent_dir++;
+            uri += 3;
+            if (uri[0] == '/' || uri[0] == '\0')
+                goto_parent_dir++;
+        }
+        
+        if (uri[0] == '/' && uri[1] != '\0')
+            goto_subdir++;
+    }
+
+    if (goto_parent_dir > goto_subdir)
+            return false;
+
+    return true;
+} 
+
 static int read_file(char *uri)
 {
+    // skip redundant slashes
+    while (strncmp("//", uri, 2) == 0)
+        uri++;
+    
+    if (!uri_is_within_root(uri))
+        return 403;
+    
     long bytes_in_file;
 
     memset(file_content_buf, '\0', sizeof(file_content_buf));
@@ -61,7 +104,7 @@ static int read_file(char *uri)
     // append uri to server root
     char path[60] = SERVER_ROOT;
     strcat(path, uri);
-
+    
     FILE *fp;
     if ((fp = fopen(path, "r")) == NULL) {
         switch (errno)

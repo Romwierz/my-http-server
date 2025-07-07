@@ -14,4 +14,6 @@ $ ./my-http
 $ curl -i 127.0.0.1:8080
 # or
 $ curl -v http://127.0.0.1:8080/index.html
+# useful options:
+--path-as-is
 ```
