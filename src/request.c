@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include "request.h"
 #include "server.h"
@@ -34,6 +35,20 @@ struct Http_method_map_entry {
 
 char file_content_buf[1024];
 
+static bool path_is_file(const char *path)
+{
+    struct stat statbuf;
+    if (stat(path, &statbuf) == -1) {
+        perror("stat");
+        return false;
+    }
+
+    if (S_ISREG(statbuf.st_mode))
+        return true;
+    else
+        return false;
+}
+
 static int read_file(char *uri)
 {
     long bytes_in_file;
@@ -58,6 +73,10 @@ static int read_file(char *uri)
         default:
             handle_error("fopen");
         }   
+    }
+    else if (!path_is_file(path)) {
+        fclose(fp);
+        return 403;
     }
     
     // get the number of bytes
