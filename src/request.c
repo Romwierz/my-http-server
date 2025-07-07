@@ -21,7 +21,7 @@ enum Http_method_t {
 };
 
 struct Http_method_map_entry {
-    char *name;
+    const char *name;
     enum Http_method_t type;
 } const http_method_map[] = {
     { "GET", GET },
@@ -37,7 +37,7 @@ char file_content_buf[1024];
 static int read_file(char *uri)
 {
     long bytes_in_file;
-    
+
     memset(file_content_buf, '\0', sizeof(file_content_buf));
 
     if (strcmp("/", uri) == 0)
@@ -60,28 +60,26 @@ static int read_file(char *uri)
         }   
     }
     
-    /* get the number of bytes */
+    // get the number of bytes
     fseek(fp, 0L, SEEK_END);
     bytes_in_file = ftell(fp);
 
     if (bytes_in_file > (long)sizeof(file_content_buf))
         bytes_in_file = (long)sizeof(file_content_buf);
 
-    /* reset the file position indicator to
-    the beginning of the file */
+    // reset the file position indicator to
+    // the beginning of the file
     fseek(fp, 0L, SEEK_SET);
 
-    /* copy all the text into the buffer */
+    // copy all the text into the buffer
     fread(file_content_buf, sizeof(char), bytes_in_file, fp);
     fclose(fp);
 
     return 200;
 }
 
-/*
-    map method name (input string) to enum representation using lookup table
-*/
-static enum Http_method_t parse_http_method(char *method)
+// map method name (input string) to enum representation using lookup table
+static enum Http_method_t parse_http_method(const char *method)
 {   
     const struct Http_method_map_entry *entry;
     for (entry = http_method_map; entry->name; entry++)
@@ -91,9 +89,7 @@ static enum Http_method_t parse_http_method(char *method)
     return entry->type;
 }
 
-/*
-    retrieve http request line elements,
-*/
+// retrieve http request line elements,
 static void parse_http_req_line(const char *const req_line, char *method, char *uri, char *version)
 {
     char *next_element;
