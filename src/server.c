@@ -16,25 +16,28 @@
 
 bool kill_server = false;
 
-void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr)
+int my_sock_init(struct sockaddr_in *my_addr)
 {
-    if ((*my_sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
+    int my_sockfd;
+    if ((my_sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
         handle_error("socket");
-    printf("Socket created: fd%d\n\n", *my_sockfd);
+    printf("Socket created: fd%d\n\n", my_sockfd);
 
     int yes = 1;
-    setsockopt(*my_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+    setsockopt(my_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 
     my_addr->sin_family = AF_INET;
     my_addr->sin_port = htons(MY_PORT);
     my_addr->sin_addr.s_addr = INADDR_ANY;
     memset(my_addr->sin_zero, '\0', sizeof my_addr->sin_zero);
 
-    if (bind(*my_sockfd, (struct sockaddr *)my_addr, sizeof(*my_addr)) == -1)
+    if (bind(my_sockfd, (struct sockaddr *)my_addr, sizeof(*my_addr)) == -1)
         handle_error("bind");
 
-    if (listen(*my_sockfd, LISTEN_BACKLOG) == -1)
+    if (listen(my_sockfd, LISTEN_BACKLOG) == -1)
         handle_error("listen");
+
+    return my_sockfd;
 }
 
 void do_server_things(void)
@@ -46,7 +49,7 @@ void do_server_things(void)
     struct sockaddr_in my_addr, client_addr;
     socklen_t addr_size;
 
-    my_sock_init(&my_sockfd, &my_addr);
+    my_sockfd = my_sock_init(&my_addr);
 
     addr_size = sizeof(client_addr);
 
@@ -58,7 +61,7 @@ void do_server_things(void)
             handle_error("accept");
         printf("Found connection: client fd%d\n\n", client_sockfd);
         
-        if (socket_receive(client_sockfd, recv_buf, sizeof(recv_buf) - 1) != -1)
+        if (socket_receive(client_sockfd, recv_buf, RECV_BUF_MAX) != -1)
             handle_request(recv_buf, client_sockfd);
 
         if (close(client_sockfd) == -1)

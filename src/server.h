@@ -6,7 +6,7 @@
 
 extern bool kill_server;
 
-void my_sock_init(int *my_sockfd, struct sockaddr_in *my_addr);
+int my_sock_init(struct sockaddr_in *my_addr);
 void do_server_things(void);
 
 #endif
