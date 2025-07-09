@@ -13,6 +13,7 @@
 
 #define SERVER_ROOT "www"
 
+#define REQ_LINE_SIZE_MAX   150
 #define METHOD_SIZE_MAX     25
 #define URI_SIZE_MAX        100
 #define VERSION_SIZE_MAX    25
@@ -211,10 +212,10 @@ static int parse_http_request(char *request)
 {
     int status_code = 200;
 
-    char req_line[150] = { 0 };
-    char method[50] = { 0 };
-    char uri[50] = { 0 };
-    char version[50] = { 0 };
+    char req_line[REQ_LINE_SIZE_MAX] = { 0 };
+    char method[METHOD_SIZE_MAX] = { 0 };
+    char uri[URI_SIZE_MAX] = { 0 };
+    char version[VERSION_SIZE_MAX] = { 0 };
     enum Http_method_t method_type;
     
     for (size_t i = 0; i < sizeof(req_line) - 1; i++)
