@@ -36,62 +36,13 @@ struct Http_method_map_entry {
 
 char file_content_buf[1024];
 
-static bool path_is_file(const char *path)
-{
-    struct stat statbuf;
-    if (stat(path, &statbuf) == -1) {
-        perror("stat");
-        return false;
-    }
-
-    if (S_ISREG(statbuf.st_mode))
-        return true;
-    else
-        return false;
-}
-
-static bool uri_is_within_root(const char *uri)
-{
-    int goto_parent_dir = 0, goto_subdir = 0;
-
-    for (; uri[0] != '\0'; uri++)
-    {
-        // parent dir access cannot be higher than subdir access at any moment
-        if (goto_parent_dir > goto_subdir)
-            return false;
-        
-        // do not allow spaces in uri
-        if (isspace(uri[0]))
-            return false;
-                
-        // skip redundant slashes
-        if (strncmp("//", uri, 2) == 0)
-            continue;
-        
-        if (strncmp("/..", uri, 3) == 0)
-        {
-            uri += 3;
-            if (uri[0] == '/' || uri[0] == '\0')
-                goto_parent_dir++;
-        }
-        
-        if (uri[0] == '/' && uri[1] != '\0')
-            goto_subdir++;
-    }
-
-    if (goto_parent_dir > goto_subdir)
-            return false;
-
-    return true;
-} 
-
 static int read_file(char *uri)
 {
     // skip redundant slashes
     while (strncmp("//", uri, 2) == 0)
         uri++;
     
-    if (!uri_is_within_root(uri))
+    if (!is_within_root(uri))
         return 403;
     
     long bytes_in_file;
@@ -119,7 +70,7 @@ static int read_file(char *uri)
             handle_error("fopen");
         }   
     }
-    else if (!path_is_file(path)) {
+    else if (!is_file(path)) {
         fclose(fp);
         return 403;
     }
@@ -153,7 +104,7 @@ static enum Http_method_t parse_http_method(const char *method)
     return entry->type;
 }
 
-// retrieve http request line elements,
+// retrieve http request line elements
 static void parse_http_req_line(const char *const req_line, char *method, char *uri, char *version)
 {
     char *next_element;
