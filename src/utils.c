@@ -103,3 +103,18 @@ bool is_within_root(const char *path)
 
     return true;
 }
+
+void convert_uri_to_path(char *uri, char *path)
+{
+    // skip redundant slashes
+    while (strncmp("//", uri, 2) == 0)
+        uri++;
+
+    if (strcmp("/", uri) == 0)
+        strcpy(uri, "/index.html");
+    
+    // append uri to server root
+    strcpy(path, SERVER_ROOT);
+    // path = (char *)SERVER_ROOT;
+    strcat(path, uri);
+}

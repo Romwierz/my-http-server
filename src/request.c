@@ -1,17 +1,13 @@
 #include <stdio.h>
-#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include <sys/stat.h>
 
 #include "request.h"
 #include "server.h"
 #include "socket_comm.h"
 #include "messages.h"
 #include "utils.h"
-
-#define SERVER_ROOT "www"
 
 #define REQ_LINE_SIZE_MAX   150
 #define METHOD_SIZE_MAX     25
@@ -38,23 +34,13 @@ char file_content_buf[1024];
 
 static int read_file(char *uri)
 {
-    // skip redundant slashes
-    while (strncmp("//", uri, 2) == 0)
-        uri++;
+    char path[sizeof(SERVER_ROOT) + URI_SIZE_MAX] = { 0 };
+    convert_uri_to_path(uri, path);
     
-    if (!is_within_root(uri))
+    if (!is_within_root(path))
         return 403;
-    
-    long bytes_in_file;
 
     memset(file_content_buf, '\0', sizeof(file_content_buf));
-
-    if (strcmp("/", uri) == 0)
-        strcpy(uri, "/index.html");
-
-    // append uri to server root
-    char path[60] = SERVER_ROOT;
-    strcat(path, uri);
     
     FILE *fp;
     if ((fp = fopen(path, "r")) == NULL) {
@@ -74,6 +60,8 @@ static int read_file(char *uri)
         fclose(fp);
         return 403;
     }
+    
+    long bytes_in_file;
     
     // get the number of bytes
     fseek(fp, 0L, SEEK_END);
