@@ -51,11 +51,18 @@ static int read_file(char *uri)
 
     if (!is_within_root(path))
         return 403;
+
+    char *modes = "r";
+    http_resp.resp_fields = "Content-Type: text/html";
+    if (strstr(path, "favicon.ico") != NULL) {
+        http_resp.resp_fields = "Content-Type: image/x-icon";
+        modes = "rb";
+    }
     
     memset(file_content_buf, '\0', sizeof(file_content_buf));
     
     FILE *fp;
-    if ((fp = fopen(path, "r")) == NULL) {
+    if ((fp = fopen(path, modes)) == NULL) {
         switch (errno)
         {
         case ENOENT: // No such file or directory
