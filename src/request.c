@@ -160,12 +160,8 @@ static void parse_http_req_line(struct Http_request_t *http_req)
     printf("version: %s\n\n", http_req->version);
 }
 
-static int parse_http_request(char *request_raw, struct Http_request_t *http_req)
+static void parse_http_request(char *request_raw, struct Http_request_t *http_req)
 {
-    int status_code = 200;
-
-    enum Http_method_t method_type;
-    
     for (size_t i = 0; i < sizeof(http_req->req_line) - 1; i++)
     {
         http_req->req_line[i] = request_raw[i];
@@ -176,11 +172,25 @@ static int parse_http_request(char *request_raw, struct Http_request_t *http_req
     printf("Request line: %s", http_req->req_line);
 
     parse_http_req_line(http_req);
+}
 
-    switch (method_type = parse_http_method(http_req->method))
+static int handle_get(struct Http_request_t *http_req)
+{
+    return read_file(http_req->uri);
+}
+
+void handle_request(char *request_raw, int sockfd)
+{
+    int status_code;
+    struct Http_request_t http_req = { 0 };
+    enum Http_method_t method_type;
+    
+    parse_http_request(request_raw, &http_req);
+
+    switch (method_type = parse_http_method(http_req.method))
     {
     case GET:
-        status_code = read_file(http_req->uri);
+        status_code = handle_get(&http_req);
         break;
     case INVALID:
         status_code = 400;
@@ -190,14 +200,5 @@ static int parse_http_request(char *request_raw, struct Http_request_t *http_req
         break;
     }
 
-    return status_code;
-}
-
-void handle_request(char *request_raw, int sockfd)
-{
-    struct Http_request_t http_req = { 0 };
-    
-    int status_code = parse_http_request(request_raw, &http_req);
-
-    http_response(status_code, NULL, file_content_buf, sockfd);
+    send_http_response(status_code, http_resp.resp_fields, file_content_buf, sockfd);
 }

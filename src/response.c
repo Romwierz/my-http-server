@@ -3,7 +3,13 @@
 #include "socket_comm.h"
 #include "messages.h"
 
+<<<<<<< HEAD
 void http_response(int status_code, const char *header_fields, const char *msg_body, int sockfd)
+=======
+struct Http_response_t http_resp;
+
+void send_http_response(int status_code, const char *header_fields, const char *msg_body, int sockfd)
+>>>>>>> b9b39c7 (refactor: rename response function)
 {
     switch (status_code)
     {
