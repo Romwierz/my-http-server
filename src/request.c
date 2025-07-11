@@ -6,8 +6,8 @@
 #include "request.h"
 #include "server.h"
 #include "socket_comm.h"
-#include "messages.h"
 #include "utils.h"
+#include "response.h"
 
 #define REQ_LINE_SIZE_MAX   150
 #define METHOD_SIZE_MAX     25
@@ -45,13 +45,13 @@ struct Http_request_t {
 char file_content_buf[1024];
 
 static int read_file(char *uri)
-{
+{   
     char path[sizeof(SERVER_ROOT) + URI_SIZE_MAX] = { 0 };
     convert_uri_to_path(uri, path);
-    
+
     if (!is_within_root(path))
         return 403;
-
+    
     memset(file_content_buf, '\0', sizeof(file_content_buf));
     
     FILE *fp;
@@ -74,7 +74,7 @@ static int read_file(char *uri)
     }
     
     long bytes_in_file;
-    
+
     // get the number of bytes
     fseek(fp, 0L, SEEK_END);
     bytes_in_file = ftell(fp);
@@ -193,44 +193,11 @@ static int parse_http_request(char *request_raw, struct Http_request_t *http_req
     return status_code;
 }
 
-static void http_response(int status_code, int sockfd)
-{
-    switch (status_code)
-    {
-    case 200:
-        socket_transmit(sockfd, HTTP_STATUS_200);
-        socket_transmit(sockfd, "\r\n");
-        socket_transmit(sockfd, file_content_buf);
-        break;
-    case 400:
-        socket_transmit(sockfd, HTTP_STATUS_400);
-        break;
-    case 403:
-        socket_transmit(sockfd, HTTP_STATUS_403);
-        break;
-    case 404:
-        socket_transmit(sockfd, HTTP_STATUS_404);
-        break;
-    case 413:
-        socket_transmit(sockfd, HTTP_STATUS_413);
-        break;
-    case 414:
-        socket_transmit(sockfd, HTTP_STATUS_414);
-        break;
-    case 501:
-        socket_transmit(sockfd, HTTP_STATUS_501);
-        break;
-    default:
-        break;
-    }
-
-    printf("HTTP response %d sent to client fd%d\n\n", status_code, sockfd);
-}
-
 void handle_request(char *request_raw, int sockfd)
 {
     struct Http_request_t http_req = { 0 };
-
+    
     int status_code = parse_http_request(request_raw, &http_req);
 
+    http_response(status_code, NULL, file_content_buf, sockfd);
 }
