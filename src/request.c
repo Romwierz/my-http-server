@@ -42,6 +42,7 @@ struct Http_request_t {
     char msg_body[MSG_BODY_SIZE_MAX];
 };
 
+long bytes_in_file;
 char file_content_buf[1024];
 
 static int read_file(char *uri)
@@ -80,8 +81,6 @@ static int read_file(char *uri)
         return 403;
     }
     
-    long bytes_in_file;
-
     // get the number of bytes
     fseek(fp, 0L, SEEK_END);
     bytes_in_file = ftell(fp);
@@ -168,7 +167,7 @@ static void parse_http_req_line(struct Http_request_t *http_req)
 }
 
 static void parse_http_request(char *request_raw, struct Http_request_t *http_req)
-{
+{    
     for (size_t i = 0; i < sizeof(http_req->req_line) - 1; i++)
     {
         http_req->req_line[i] = request_raw[i];

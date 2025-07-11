@@ -25,6 +25,7 @@ struct Http_response_t http_resp;
         socket_transmit(sockfd, header_fields, strlen(header_fields));
         socket_transmit(sockfd, CRLF, strlen(CRLF));
         socket_transmit(sockfd, CRLF, strlen(CRLF));
+        socket_transmit(sockfd, msg_body, bytes_in_file);
         break;
     case 400:
         socket_transmit(sockfd, HTTP_STATUS_400, strlen(HTTP_STATUS_400));
