@@ -13,6 +13,9 @@
 #define METHOD_SIZE_MAX     25
 #define URI_SIZE_MAX        100
 #define VERSION_SIZE_MAX    25
+#define REQ_FIELD_SIZE_MAX  50
+#define REQ_FIELDS_MAX      5
+#define MSG_BODY_SIZE_MAX   600
 
 enum Http_method_t {
     INVALID, GET, HEAD, POST, PUT, DELETE
@@ -28,6 +31,15 @@ struct Http_method_map_entry {
     { "PUT", PUT },
     { "DELETE", DELETE },
     { 0, INVALID }
+};
+
+struct Http_request_t {
+    char req_line[REQ_LINE_SIZE_MAX];
+    char method[METHOD_SIZE_MAX];
+    char uri[URI_SIZE_MAX];
+    char version[VERSION_SIZE_MAX];
+    char *req_fields[REQ_FIELDS_MAX];
+    char msg_body[MSG_BODY_SIZE_MAX];
 };
 
 char file_content_buf[1024];
@@ -93,8 +105,9 @@ static enum Http_method_t parse_http_method(const char *method)
 }
 
 // retrieve http request line elements
-static void parse_http_req_line(const char *const req_line, char *method, char *uri, char *version)
+static void parse_http_req_line(struct Http_request_t *http_req)
 {
+    const char *req_line = http_req->req_line;
     char *next_element;
     size_t element_size = 0;
     int element_cnt = 0;
@@ -122,18 +135,18 @@ static void parse_http_req_line(const char *const req_line, char *method, char *
             case 1:
                 if (element_size > METHOD_SIZE_MAX)
                     element_size = METHOD_SIZE_MAX;
-                memccpy(method, next_element, ' ', element_size);
+                memccpy(http_req->method, next_element, ' ', element_size);
                 break;
             case 2:
                 // implement 414 req_line-URI Too Long
                 if (element_size > URI_SIZE_MAX)
                     element_size = URI_SIZE_MAX;
-                memccpy(uri, next_element, ' ', element_size);
+                memccpy(http_req->uri, next_element, ' ', element_size);
                 break;
             case 3:
                 if (element_size > VERSION_SIZE_MAX)
                     element_size = VERSION_SIZE_MAX;
-                memccpy(version, next_element, ' ', element_size);
+                memccpy(http_req->version, next_element, ' ', element_size);
                 break;
             default:
                 break;
@@ -142,36 +155,32 @@ static void parse_http_req_line(const char *const req_line, char *method, char *
         }
     }
     
-    printf("method: %s\n", method);
-    printf("uri: %s\n", uri);
-    printf("version: %s\n\n", version);
+    printf("method: %s\n", http_req->method);
+    printf("uri: %s\n", http_req->uri);
+    printf("version: %s\n\n", http_req->version);
 }
 
-static int parse_http_request(char *request)
+static int parse_http_request(char *request_raw, struct Http_request_t *http_req)
 {
     int status_code = 200;
 
-    char req_line[REQ_LINE_SIZE_MAX] = { 0 };
-    char method[METHOD_SIZE_MAX] = { 0 };
-    char uri[URI_SIZE_MAX] = { 0 };
-    char version[VERSION_SIZE_MAX] = { 0 };
     enum Http_method_t method_type;
     
-    for (size_t i = 0; i < sizeof(req_line) - 1; i++)
+    for (size_t i = 0; i < sizeof(http_req->req_line) - 1; i++)
     {
-        req_line[i] = request[i];
-        if (i > 0 && request[i - 1] == '\r' && request[i] == '\n') {
+        http_req->req_line[i] = request_raw[i];
+        if (i > 0 && request_raw[i - 1] == '\r' && request_raw[i] == '\n') {
             break;
         }
     }
-    printf("Request line: %s", req_line);
+    printf("Request line: %s", http_req->req_line);
 
-    parse_http_req_line(req_line, method, uri, version);
+    parse_http_req_line(http_req);
 
-    switch (method_type = parse_http_method(method))
+    switch (method_type = parse_http_method(http_req->method))
     {
     case GET:
-        status_code = read_file(uri);
+        status_code = read_file(http_req->uri);
         break;
     case INVALID:
         status_code = 400;
@@ -218,9 +227,10 @@ static void http_response(int status_code, int sockfd)
     printf("HTTP response %d sent to client fd%d\n\n", status_code, sockfd);
 }
 
-void handle_request(char *request, int sockfd)
+void handle_request(char *request_raw, int sockfd)
 {
-    int status_code = parse_http_request(request);
+    struct Http_request_t http_req = { 0 };
 
-    http_response(status_code, sockfd);
+    int status_code = parse_http_request(request_raw, &http_req);
+
 }
