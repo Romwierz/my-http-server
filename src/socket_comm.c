@@ -53,9 +53,9 @@ static void socket_receive_excessive(int sockfd)
     socket_disable_timeout(sockfd);
 }
 
-void socket_transmit(int sockfd, const char * msg)
+void socket_transmit(int sockfd, const char *data, size_t data_size)
 {
-    if (send(sockfd, msg, strlen(msg), 0) == -1)
+    if (send(sockfd, data, data_size, 0) == -1)
         handle_error("send");
 }
 

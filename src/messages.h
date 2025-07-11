@@ -4,6 +4,7 @@
 #define PROMPT      "> "
 #define HELLO_MSG   "Hello, my name is server :-)\n"
 #define HELP_MSG    "h - help\ni - request\nq - disconnect\nk - kill server\n"
+#define CRLF        "\r\n"
 
 // https://datatracker.ietf.org/doc/html/rfc1945#section-9
 // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
