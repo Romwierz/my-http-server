@@ -45,7 +45,7 @@ struct Http_request_t {
 long bytes_in_file;
 char file_content_buf[1024];
 
-static int read_file(char *uri)
+static int read_file(char *uri, char **resp_fields)
 {   
     char path[sizeof(SERVER_ROOT) + URI_SIZE_MAX] = { 0 };
     convert_uri_to_path(uri, path);
@@ -54,9 +54,9 @@ static int read_file(char *uri)
         return 403;
 
     char *modes = "r";
-    http_resp.resp_fields = "Content-Type: text/html";
+    *resp_fields = "Content-Type: text/html";
     if (strstr(path, "favicon.ico") != NULL) {
-        http_resp.resp_fields = "Content-Type: image/x-icon";
+        *resp_fields = "Content-Type: image/x-icon";
         modes = "rb";
     }
     
@@ -180,9 +180,9 @@ static void parse_http_request(char *request_raw, struct Http_request_t *http_re
     parse_http_req_line(http_req);
 }
 
-static int handle_get(struct Http_request_t *http_req)
+static int handle_get(struct Http_request_t *http_req, struct Http_response_t *http_resp)
 {
-    return read_file(http_req->uri);
+    return read_file(http_req->uri, &http_resp->resp_fields);
 }
 
 void handle_request(char *request_raw, int sockfd)
@@ -190,13 +190,14 @@ void handle_request(char *request_raw, int sockfd)
     int status_code;
     struct Http_request_t http_req = { 0 };
     enum Http_method_t method_type;
+    struct Http_response_t http_resp = { 0 };
     
     parse_http_request(request_raw, &http_req);
 
     switch (method_type = parse_http_method(http_req.method))
     {
     case GET:
-        status_code = handle_get(&http_req);
+        status_code = handle_get(&http_req, &http_resp);
         break;
     case INVALID:
         status_code = 400;

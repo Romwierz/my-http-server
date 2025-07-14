@@ -5,8 +5,6 @@
 #include "socket_comm.h"
 #include "messages.h"
 
-struct Http_response_t http_resp;
-
 void send_http_response(int status_code, const char *header_fields, const char *msg_body, int sockfd)
 {
     switch (status_code)
