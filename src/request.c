@@ -42,8 +42,6 @@ struct Http_request_t {
     char msg_body[MSG_BODY_SIZE_MAX];
 };
 
-long bytes_in_file;
-char file_content_buf[1024];
 
 static int read_file(char *uri, struct Http_response_t *http_resp)
 {   
@@ -60,7 +58,7 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
         modes = "rb";
     }
     
-    memset(file_content_buf, '\0', sizeof(file_content_buf));
+    memset(http_resp->msg_body, '\0', sizeof(http_resp->msg_body));
     
     FILE *fp;
     if ((fp = fopen(path, modes)) == NULL) {
@@ -83,17 +81,17 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
     
     // get the number of bytes
     fseek(fp, 0L, SEEK_END);
-    bytes_in_file = ftell(fp);
+    http_resp->msg_body_size = ftell(fp);
 
-    if (bytes_in_file > (long)sizeof(file_content_buf))
-        bytes_in_file = (long)sizeof(file_content_buf);
+    if (http_resp->msg_body_size > (long)sizeof(http_resp->msg_body))
+        http_resp->msg_body_size = (long)sizeof(http_resp->msg_body);
 
     // reset the file position indicator to
     // the beginning of the file
     fseek(fp, 0L, SEEK_SET);
 
     // copy all the text into the buffer
-    fread(file_content_buf, sizeof(char), bytes_in_file, fp);
+    fread(http_resp->msg_body, sizeof(char), http_resp->msg_body_size, fp);
     fclose(fp);
 
     return 200;

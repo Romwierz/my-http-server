@@ -14,7 +14,7 @@ void send_http_response(int status_code, struct Http_response_t *http_resp, int 
         socket_transmit(sockfd, http_resp->header_field.name, strlen(http_resp->header_field.name));
         socket_transmit(sockfd, CRLF, strlen(CRLF));
         socket_transmit(sockfd, CRLF, strlen(CRLF));
-        socket_transmit(sockfd, msg_body, bytes_in_file);
+        socket_transmit(sockfd, http_resp->msg_body, http_resp->msg_body_size);
         break;
     case 400:
         socket_transmit(sockfd, HTTP_STATUS_400, strlen(HTTP_STATUS_400));

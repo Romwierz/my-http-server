@@ -9,6 +9,7 @@ struct Http_response_t {
         char *value;
     } header_field;
     char msg_body[1024];
+    long msg_body_size;
 };
 
 void send_http_response(int status_code, struct Http_response_t *http_resp, int sockfd);
