@@ -12,6 +12,6 @@ struct Http_response_t {
     long msg_body_size;
 };
 
-void send_http_response(int status_code, struct Http_response_t *http_resp, int sockfd);
+void send_http_response(struct Http_response_t *http_resp, int sockfd);
 
 #endif

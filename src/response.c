@@ -5,9 +5,9 @@
 #include "socket_comm.h"
 #include "messages.h"
 
-void send_http_response(int status_code, struct Http_response_t *http_resp, int sockfd)
+void send_http_response(struct Http_response_t *http_resp, int sockfd)
 {
-    switch (status_code)
+    switch (http_resp->status_code)
     {
     case 200:
         socket_transmit(sockfd, HTTP_STATUS_200, strlen(HTTP_STATUS_200));
@@ -38,5 +38,5 @@ void send_http_response(int status_code, struct Http_response_t *http_resp, int 
         break;
     }
 
-    printf("HTTP response %d sent to client fd%d\n\n", status_code, sockfd);
+    printf("HTTP response %d sent to client fd%d\n\n", http_resp->status_code, sockfd);
 }

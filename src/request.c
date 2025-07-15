@@ -185,7 +185,6 @@ static int handle_get(struct Http_request_t *http_req, struct Http_response_t *h
 
 void handle_request(char *request_raw, int sockfd)
 {
-    int status_code;
     struct Http_request_t http_req = { 0 };
     enum Http_method_t method_type;
     struct Http_response_t http_resp = { 0 };
@@ -195,15 +194,15 @@ void handle_request(char *request_raw, int sockfd)
     switch (method_type = parse_http_method(http_req.method))
     {
     case GET:
-        status_code = handle_get(&http_req, &http_resp);
+        http_resp.status_code = handle_get(&http_req, &http_resp);
         break;
     case INVALID:
-        status_code = 400;
+        http_resp.status_code = 400;
         break;
     default:
-        status_code = 501;
+        http_resp.status_code = 501;
         break;
     }
 
-    send_http_response(status_code, &http_resp, sockfd);
+    send_http_response(&http_resp, sockfd);
 }
