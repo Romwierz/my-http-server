@@ -5,13 +5,13 @@
 #include "socket_comm.h"
 #include "messages.h"
 
-void send_http_response(int status_code, const char *header_fields, const char *msg_body, int sockfd)
+void send_http_response(int status_code, struct Http_response_t *http_resp, int sockfd)
 {
     switch (status_code)
     {
     case 200:
         socket_transmit(sockfd, HTTP_STATUS_200, strlen(HTTP_STATUS_200));
-        socket_transmit(sockfd, header_fields, strlen(header_fields));
+        socket_transmit(sockfd, http_resp->header_field.name, strlen(http_resp->header_field.name));
         socket_transmit(sockfd, CRLF, strlen(CRLF));
         socket_transmit(sockfd, CRLF, strlen(CRLF));
         socket_transmit(sockfd, msg_body, bytes_in_file);

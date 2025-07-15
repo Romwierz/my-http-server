@@ -45,7 +45,7 @@ struct Http_request_t {
 long bytes_in_file;
 char file_content_buf[1024];
 
-static int read_file(char *uri, char **resp_fields)
+static int read_file(char *uri, struct Http_response_t *http_resp)
 {   
     char path[sizeof(SERVER_ROOT) + URI_SIZE_MAX] = { 0 };
     convert_uri_to_path(uri, path);
@@ -53,10 +53,10 @@ static int read_file(char *uri, char **resp_fields)
     if (!is_within_root(path))
         return 403;
 
-    char *modes = "r";
-    *resp_fields = "Content-Type: text/html";
+    const char *modes = "r";
+    http_resp->header_field.name = "Content-Type: text/html";
     if (strstr(path, "favicon.ico") != NULL) {
-        *resp_fields = "Content-Type: image/x-icon";
+        http_resp->header_field.name = "Content-Type: image/x-icon";
         modes = "rb";
     }
     
@@ -182,7 +182,7 @@ static void parse_http_request(char *request_raw, struct Http_request_t *http_re
 
 static int handle_get(struct Http_request_t *http_req, struct Http_response_t *http_resp)
 {
-    return read_file(http_req->uri, &http_resp->resp_fields);
+    return read_file(http_req->uri, http_resp);
 }
 
 void handle_request(char *request_raw, int sockfd)
@@ -207,5 +207,5 @@ void handle_request(char *request_raw, int sockfd)
         break;
     }
 
-    send_http_response(status_code, http_resp.resp_fields, file_content_buf, sockfd);
+    send_http_response(status_code, &http_resp, sockfd);
 }
