@@ -67,6 +67,9 @@ void add_response_header(struct Http_response_t *http_resp, const char *name, co
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) {
             header_found = true;
+            // return if value is already contained by existing header
+            if (strstr(current->value, value))
+                return;
             break;
         }
         tail = current;
