@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <ctype.h>
-#include <stdbool.h>
 #include <sys/stat.h>
 
 #include "utils.h"

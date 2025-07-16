@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <stdbool.h>
+
 #define PRINT_USAGE() fprintf(stderr, "Usage: %s [-p port]\n", argv[0])
 #define handle_error(msg) do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
@@ -11,7 +13,7 @@
 #define SERVER_ROOT "www"
 
 void parse_args(int argc, char *argv[]);
-void remove_trailing_newline(char * str, size_t max_len);
+void remove_trailing_newline(char *str, size_t max_len);
 char *remove_leading_whitespaces(char *str);
 bool is_file(const char *path);
 bool is_within_root(const char *path);
