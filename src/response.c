@@ -4,6 +4,8 @@
 #include "request.h"
 #include "socket_comm.h"
 #include "messages.h"
+#include "utils.h"
+
 static void send_headers(struct Header_field_t *headers, int sockfd)
 {
     while (headers != NULL) {
@@ -52,4 +54,42 @@ void send_http_response(struct Http_response_t *http_resp, int sockfd)
 
     printf("\n");
 }
+
+void add_response_header(struct Http_response_t *http_resp, const char *name, char *value)
+{
+    struct Header_field_t *head = http_resp->headers;
+    struct Header_field_t *current = head;
+    struct Header_field_t *tail = NULL;
+    bool header_found = false;
+
+    // iterate over header list until finding the one with name passed to this function
+    while (current != NULL) {
+        if (strcmp(current->name, name) == 0) {
+            header_found = true;
+            break;
+        }
+        tail = current;
+        current = current->next;
+    }
+    
+    // if header found assign value, else create new header
+    // TODO: append value instead of overwriting it
+    if (header_found) {
+        current->value = value;
+    }
+    else {
+        struct Header_field_t *new_header = (struct Header_field_t *) malloc(sizeof(struct Header_field_t));
+        if (new_header == NULL)
+            handle_error("malloc");
+        
+        new_header->next = NULL;
+        new_header->name = name;
+        new_header->value = value;
+        
+        if (tail == NULL)
+            http_resp->headers = new_header;            
+        else
+            tail->next = new_header;
+    }
 }
+

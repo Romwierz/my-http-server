@@ -52,9 +52,9 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
         return 403;
 
     const char *modes = "r";
-    http_resp->header_field.name = "Content-Type: text/html";
+    add_response_header(http_resp, "Content-Type: ", (char *)"text/html");
     if (strstr(path, "favicon.ico") != NULL) {
-        http_resp->header_field.name = "Content-Type: image/x-icon";
+        add_response_header(http_resp, "Content-Type: ", (char *)"image/x-icon");
         modes = "rb";
     }
     
@@ -203,6 +203,9 @@ void handle_request(char *request_raw, int sockfd)
         http_resp.status_code = 501;
         break;
     }
+
+    add_response_header(&http_resp, "Test-header: ", (char *)"jeden");
+    add_response_header(&http_resp, "Test-header: ", (char *)"dwa");
 
     send_http_response(&http_resp, sockfd);
 }
