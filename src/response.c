@@ -4,15 +4,27 @@
 #include "request.h"
 #include "socket_comm.h"
 #include "messages.h"
+static void send_headers(struct Header_field_t *headers, int sockfd)
+{
+    while (headers != NULL) {
+        socket_transmit(sockfd, headers->name, strlen(headers->name));
+        socket_transmit(sockfd, headers->value, strlen(headers->value));
+        socket_transmit(sockfd, CRLF, strlen(CRLF));
+        printf("%s%s\n", headers->name, headers->value);
+        headers = headers->next;
+    }
+}
 
 void send_http_response(struct Http_response_t *http_resp, int sockfd)
 {
+    printf("HTTP response %d sent to client fd%d\n", http_resp->status_code, sockfd);
+
     switch (http_resp->status_code)
     {
     case 200:
+        printf("Data sent:\n");
         socket_transmit(sockfd, HTTP_STATUS_200, strlen(HTTP_STATUS_200));
-        socket_transmit(sockfd, http_resp->header_field.name, strlen(http_resp->header_field.name));
-        socket_transmit(sockfd, CRLF, strlen(CRLF));
+        send_headers(http_resp->headers, sockfd);
         socket_transmit(sockfd, CRLF, strlen(CRLF));
         socket_transmit(sockfd, http_resp->msg_body, http_resp->msg_body_size);
         break;
@@ -38,5 +50,6 @@ void send_http_response(struct Http_response_t *http_resp, int sockfd)
         break;
     }
 
-    printf("HTTP response %d sent to client fd%d\n\n", http_resp->status_code, sockfd);
+    printf("\n");
+}
 }
