@@ -93,3 +93,14 @@ void add_response_header(struct Http_response_t *http_resp, const char *name, ch
     }
 }
 
+void free_response(struct Http_response_t *http_resp)
+{
+    struct Header_field_t *header_current = http_resp->headers;
+    struct Header_field_t *header_next;
+
+    while (header_current != NULL) {
+        header_next = header_current->next;
+        free(header_current);
+        header_current = header_next;
+    }
+}

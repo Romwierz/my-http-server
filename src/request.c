@@ -208,4 +208,5 @@ void handle_request(char *request_raw, int sockfd)
     add_response_header(&http_resp, "Test-header: ", (char *)"dwa");
 
     send_http_response(&http_resp, sockfd);
+    free_response(&http_resp);
 }

@@ -1,10 +1,10 @@
 #ifndef RESPONSE_H
 #define RESPONSE_H
 
-    struct Header_field_t {
-        struct Header_field_t *next;
-        const char *name;
-        char *value;
+struct Header_field_t {
+    struct Header_field_t *next;
+    const char *name;
+    char *value;
 };
 
 struct Http_response_t {
@@ -16,5 +16,6 @@ struct Http_response_t {
 
 void send_http_response(struct Http_response_t *http_resp, int sockfd);
 void add_response_header(struct Http_response_t *http_resp, const char *name, char *value);
+void free_response(struct Http_response_t *http_resp);
 
 #endif
