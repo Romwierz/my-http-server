@@ -10,9 +10,10 @@ static void send_headers(struct Header_field_t *headers, int sockfd)
 {
     while (headers != NULL) {
         socket_transmit(sockfd, headers->name, strlen(headers->name));
+        socket_transmit(sockfd, ": ", strlen(": "));
         socket_transmit(sockfd, headers->value, strlen(headers->value));
         socket_transmit(sockfd, CRLF, strlen(CRLF));
-        printf("%s%s\n", headers->name, headers->value);
+        printf("%s: %s\n", headers->name, headers->value);
         headers = headers->next;
     }
 }
