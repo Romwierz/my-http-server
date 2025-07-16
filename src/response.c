@@ -56,7 +56,7 @@ void send_http_response(struct Http_response_t *http_resp, int sockfd)
     printf("\n");
 }
 
-void add_response_header(struct Http_response_t *http_resp, const char *name, char *value)
+void add_response_header(struct Http_response_t *http_resp, const char *name, const char *value)
 {
     struct Header_field_t *head = http_resp->headers;
     struct Header_field_t *current = head;
@@ -73,10 +73,12 @@ void add_response_header(struct Http_response_t *http_resp, const char *name, ch
         current = current->next;
     }
     
-    // if header found assign value, else create new header
-    // TODO: append value instead of overwriting it
+    // if header found append new value, else create new header
     if (header_found) {
-        current->value = value;
+        size_t new_length = strlen(current->value) + strlen(", ") + strlen(value) + 1;
+        current->value = (char *) realloc(current->value, new_length);
+        strcat(current->value, ", ");
+        strncat(current->value, value, strlen(value));
     }
     else {
         struct Header_field_t *new_header = (struct Header_field_t *) malloc(sizeof(struct Header_field_t));
@@ -85,7 +87,10 @@ void add_response_header(struct Http_response_t *http_resp, const char *name, ch
         
         new_header->next = NULL;
         new_header->name = name;
-        new_header->value = value;
+        new_header->value = (char *) malloc(strlen(value) + 1);
+        if (new_header->value == NULL)
+            handle_error("malloc");
+        strcpy(new_header->value, value);
         
         if (tail == NULL)
             http_resp->headers = new_header;            
@@ -101,6 +106,7 @@ void free_response(struct Http_response_t *http_resp)
 
     while (header_current != NULL) {
         header_next = header_current->next;
+        free(header_current->value);
         free(header_current);
         header_current = header_next;
     }
