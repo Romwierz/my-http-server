@@ -111,60 +111,25 @@ static enum Http_method_t parse_http_method(const char *method)
 // retrieve http request line elements
 static void parse_http_req_line(struct Http_request_t *http_req)
 {
-    const char *req_line = http_req->req_line;
-    char *next_element;
-    size_t element_size = 0;
-    int element_cnt = 0;
-    bool req_line_end = false;
+    char req_line[REQ_LINE_SIZE_MAX + 1] = { 0 };
+    char *method, *uri, *version;
 
-    // each element of request line is separated by space,
-    // so the element is written into corresponding string when:
-    // - space or null occured
-    // - element size is greater than zero
-    for (size_t i = 0; i < strlen(req_line); i++)
-    {
-        if (i > 0 && req_line[i - 1] == '\r' && req_line[i] == '\n')
-            req_line_end = true;
+    strncpy(req_line, http_req->req_line, REQ_LINE_SIZE_MAX);
 
-        if (!isspace(req_line[i]) && element_size == 0)
-            next_element = (char *)&req_line[i];
-        
-        if (!isspace(req_line[i]))
-            element_size++;
-        
-        if ((isspace(req_line[i]) || req_line_end) && element_size > 0) {
-            element_cnt++;
-            switch (element_cnt)
-            {
-            case 1:
-                if (element_size > METHOD_SIZE_MAX)
-                    element_size = METHOD_SIZE_MAX;
-                memccpy(http_req->method, next_element, ' ', element_size);
-                break;
-            case 2:
-                // implement 414 req_line-URI Too Long
-                if (element_size > URI_SIZE_MAX)
-                    element_size = URI_SIZE_MAX;
-                memccpy(http_req->uri, next_element, ' ', element_size);
-                break;
-            case 3:
-                if (element_size > VERSION_SIZE_MAX)
-                    element_size = VERSION_SIZE_MAX;
-                memccpy(http_req->version, next_element, ' ', element_size);
-                break;
-            default:
-                break;
-            }
-            element_size = 0;
-        }
-    }
-    
-    printf("method: %s\n", http_req->method);
-    printf("uri: %s\n", http_req->uri);
-    printf("version: %s\n\n", http_req->version);
+    method = strtok(req_line, " ");
+    uri = strtok(NULL, " ");
+    version = strtok(NULL, "\r\n");
+
+    strncpy(http_req->method, method, METHOD_SIZE_MAX);
+    strncpy(http_req->uri, uri, URI_SIZE_MAX);
+    strncpy(http_req->version, version, VERSION_SIZE_MAX);
+
+    printf("Method: %s\n", http_req->method);
+    printf("URI: %s\n", http_req->uri);
+    printf("Version: %s\n\n", http_req->version);
 }
 
-static void parse_http_request(char *request_raw, struct Http_request_t *http_req)
+static void parse_http_request(const char *request_raw, struct Http_request_t *http_req)
 {    
     for (size_t i = 0; i < sizeof(http_req->req_line) - 1; i++)
     {
@@ -183,7 +148,7 @@ static int handle_get(struct Http_request_t *http_req, struct Http_response_t *h
     return read_file(http_req->uri, http_resp);
 }
 
-void handle_request(char *request_raw, int sockfd)
+void handle_request(const char *request_raw, int sockfd)
 {
     struct Http_request_t http_req = { 0 };
     enum Http_method_t method_type;
