@@ -8,6 +8,7 @@
 #include "socket_comm.h"
 #include "utils.h"
 #include "response.h"
+#include "mime.h"
 
 #define REQ_LINE_SIZE_MAX   150
 #define METHOD_SIZE_MAX     25
@@ -48,20 +49,15 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
     char path[sizeof(SERVER_ROOT) + URI_SIZE_MAX] = { 0 };
     convert_uri_to_path(uri, path);
 
-    if (!is_within_root(path))
+    if (!is_within_root(path) || !is_file(path))
         return 403;
 
-    const char *modes = "r";
-    add_response_header(http_resp, "Content-Type", "text/html");
-    if (strstr(path, "favicon.ico") != NULL) {
-        add_response_header(http_resp, "Content-Type", "image/x-icon");
-        modes = "rb";
-    }
-    
-    memset(http_resp->msg_body, '\0', sizeof(http_resp->msg_body));
+    const mime_t mime_type = get_mime_type(path);
+
+    add_response_header(http_resp, "Content-Type", mime_type.type);
     
     FILE *fp;
-    if ((fp = fopen(path, modes)) == NULL) {
+    if ((fp = fopen(path, mime_type.read_mode)) == NULL) {
         switch (errno)
         {
         case ENOENT: // No such file or directory
@@ -74,10 +70,6 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
             handle_error("fopen");
         }   
     }
-    else if (!is_file(path)) {
-        fclose(fp);
-        return 403;
-    }
     
     // get the number of bytes
     fseek(fp, 0L, SEEK_END);
@@ -89,6 +81,9 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
     // reset the file position indicator to
     // the beginning of the file
     fseek(fp, 0L, SEEK_SET);
+
+    // clear buffer
+    memset(http_resp->msg_body, '\0', sizeof(http_resp->msg_body));
 
     // copy all the text into the buffer
     fread(http_resp->msg_body, sizeof(char), http_resp->msg_body_size, fp);
