@@ -54,7 +54,7 @@ static int open_file(const char *path, const char *modes, FILE **fp)
     return 200;
 }
 
-static int read_file(char *uri, struct Http_response_t *http_resp)
+static int check_file(char *uri, struct Http_response_t *http_resp)
 {   
     char path[sizeof(SERVER_ROOT) + URI_SIZE_MAX] = { 0 };
     
@@ -64,7 +64,6 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
         return 403;
 
     const mime_t mime_type = get_mime_type(path);
-
     add_response_header(http_resp, "Content-Type", mime_type.type);
         
     FILE *fp;
@@ -72,24 +71,13 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
 
     if ((status_code = open_file(path, mime_type.read_mode, &fp)) != 200)
         return status_code;
-    
-    // get the number of bytes
-    fseek(fp, 0L, SEEK_END);
-    http_resp->msg_body_size = ftell(fp);
-
-    if (http_resp->msg_body_size > (long)sizeof(http_resp->msg_body))
-        http_resp->msg_body_size = (long)sizeof(http_resp->msg_body);
-
-    // reset the file position indicator to
-    // the beginning of the file
-    fseek(fp, 0L, SEEK_SET);
-
-    // clear buffer
-    memset(http_resp->msg_body, '\0', sizeof(http_resp->msg_body));
-
-    // copy all the text into the buffer
-    fread(http_resp->msg_body, sizeof(char), http_resp->msg_body_size, fp);
     fclose(fp);
+    
+    char *file_size_str = get_file_size_str(path);
+    add_response_header(http_resp, "Content-Length", file_size_str);
+
+    strcpy(http_resp->filepath, path);
+    http_resp->filesize = get_file_size(path);
 
     return status_code;
 }
@@ -142,7 +130,7 @@ static void parse_http_request(const char *request_raw, struct Http_request_t *h
 
 static int handle_get(struct Http_request_t *http_req, struct Http_response_t *http_resp)
 {
-    return read_file(http_req->uri, http_resp);
+    return check_file(http_req->uri, http_resp);
 }
 
 void handle_request(const char *request_raw, int sockfd)
