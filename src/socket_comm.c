@@ -53,10 +53,14 @@ static void socket_receive_excessive(int sockfd)
     socket_disable_timeout(sockfd);
 }
 
-void socket_transmit(int sockfd, const char *data, size_t data_size)
+size_t socket_transmit(int sockfd, const char *data, size_t data_size)
 {
-    if (send(sockfd, data, data_size, 0) == -1)
+    ssize_t bytes_sent;
+
+    if ((bytes_sent = send(sockfd, data, data_size, 0)) == -1)
         handle_error("send");
+    
+    return (size_t)bytes_sent;
 }
 
 int socket_receive(int sockfd, char *recv_buf, size_t buf_size)

@@ -8,7 +8,7 @@
 
 #define RECV_BUF_MAX 1024
 
-void socket_transmit(int sockfd, const char *data, size_t data_size);
+size_t socket_transmit(int sockfd, const char *data, size_t data_size);
 int socket_receive(int sockfd, char *recv_buf, size_t buf_size);
 
 #endif
