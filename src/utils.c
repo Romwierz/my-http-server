@@ -78,6 +78,18 @@ size_t get_file_size(const char *path)
     return statbuf.st_size;
 }
 
+char *get_file_size_str(const char *path)
+{
+    size_t file_size = get_file_size(path);
+    static char file_size_str[FILESIZE_DIGITS_MAX];
+
+    memset(file_size_str, '\0', sizeof(file_size_str));
+
+    snprintf(file_size_str, sizeof(file_size_str), "%ld", file_size);
+
+    return file_size_str;
+}
+
 // prevent accessing server root's parent directory
 bool is_within_root(const char *path)
 {
