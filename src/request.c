@@ -43,21 +43,9 @@ struct Http_request_t {
     char msg_body[MSG_BODY_SIZE_MAX];
 };
 
-
-static int read_file(char *uri, struct Http_response_t *http_resp)
-{   
-    char path[sizeof(SERVER_ROOT) + URI_SIZE_MAX] = { 0 };
-    convert_uri_to_path(uri, path);
-
-    if (!is_within_root(path) || !is_file(path))
-        return 403;
-
-    const mime_t mime_type = get_mime_type(path);
-
-    add_response_header(http_resp, "Content-Type", mime_type.type);
-    
-    FILE *fp;
-    if ((fp = fopen(path, mime_type.read_mode)) == NULL) {
+static int open_file(const char *path, const char *modes, FILE **fp)
+{
+    if ((*fp = fopen(path, modes)) == NULL) {
         switch (errno)
         {
         case ENOENT: // No such file or directory
@@ -70,6 +58,28 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
             handle_error("fopen");
         }   
     }
+
+    return 200;
+}
+
+static int read_file(char *uri, struct Http_response_t *http_resp)
+{   
+    char path[sizeof(SERVER_ROOT) + URI_SIZE_MAX] = { 0 };
+    
+    convert_uri_to_path(uri, path);
+
+    if (!is_within_root(path) || !is_file(path))
+        return 403;
+
+    const mime_t mime_type = get_mime_type(path);
+
+    add_response_header(http_resp, "Content-Type", mime_type.type);
+        
+    FILE *fp;
+    int status_code = 200;
+
+    if ((status_code = open_file(path, mime_type.read_mode, &fp)) != 200)
+        return status_code;
     
     // get the number of bytes
     fseek(fp, 0L, SEEK_END);
@@ -89,7 +99,7 @@ static int read_file(char *uri, struct Http_response_t *http_resp)
     fread(http_resp->msg_body, sizeof(char), http_resp->msg_body_size, fp);
     fclose(fp);
 
-    return 200;
+    return status_code;
 }
 
 // map method name (input string) to enum representation using lookup table
