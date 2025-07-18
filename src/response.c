@@ -1,10 +1,9 @@
 #include <stdio.h>
 
 #include "response.h"
-#include "request.h"
 #include "socket_comm.h"
 #include "messages.h"
-#include "utils.h"
+#include "mime.h"
 
 static void send_headers(struct Header_field_t *headers, int sockfd)
 {
@@ -18,18 +17,49 @@ static void send_headers(struct Header_field_t *headers, int sockfd)
     }
 }
 
+static void send_file(const char *filepath, size_t filesize, int sockfd)
+{
+    if (filepath == NULL || filesize == 0)
+        return;
+    
+    char send_buf[SEND_BUF_SIZE_MAX] = { 0 };
+    size_t bytes_to_read = filesize;
+    size_t data_size;
+    FILE *fp;
+
+    const mime_t mime_type = get_mime_type(filepath);
+
+    if ((fp = fopen(filepath, mime_type.read_mode)) == NULL)
+        return;
+
+    // reset the file position indicator to the beginning of the file
+    fseek(fp, 0L, SEEK_SET);
+
+    while (bytes_to_read > 0)
+    {
+        data_size = bytes_to_read > sizeof(send_buf) ? sizeof(send_buf) : bytes_to_read;
+        bytes_to_read -= fread(send_buf, sizeof(char), sizeof(send_buf), fp);
+        if (socket_transmit(sockfd, send_buf, data_size) != data_size)
+            continue; // TODO: handle error
+    }
+    
+    fclose(fp);
+
+    return;
+}
+
 void send_http_response(struct Http_response_t *http_resp, int sockfd)
 {
     printf("HTTP response %d sent to client fd%d\n", http_resp->status_code, sockfd);
+    printf("Data sent:\n");
 
+    // TODO:
+    // get rid of switch cases by just writing status line string
+    // into http_resp struct earlier in the program
     switch (http_resp->status_code)
     {
     case 200:
-        printf("Data sent:\n");
         socket_transmit(sockfd, HTTP_STATUS_200, strlen(HTTP_STATUS_200));
-        send_headers(http_resp->headers, sockfd);
-        socket_transmit(sockfd, CRLF, strlen(CRLF));
-        socket_transmit(sockfd, http_resp->msg_body, http_resp->msg_body_size);
         break;
     case 400:
         socket_transmit(sockfd, HTTP_STATUS_400, strlen(HTTP_STATUS_400));
@@ -52,6 +82,10 @@ void send_http_response(struct Http_response_t *http_resp, int sockfd)
     default:
         break;
     }
+
+    send_headers(http_resp->headers, sockfd);
+    socket_transmit(sockfd, CRLF, strlen(CRLF));
+    send_file(http_resp->filepath, http_resp->filesize, sockfd);
 
     printf("\n");
 }
@@ -114,7 +148,7 @@ const char *get_response_header_value(struct Http_response_t *http_resp, const c
 
     if (node == NULL)
         return NULL;
-        
+
     return node->value;
 }
 

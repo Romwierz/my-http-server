@@ -1,6 +1,11 @@
 #ifndef RESPONSE_H
 #define RESPONSE_H
 
+#include "request.h"
+#include "utils.h"
+
+#define SEND_BUF_SIZE_MAX 4096
+
 struct Header_field_t {
     struct Header_field_t *next;
     const char *name;
@@ -10,8 +15,8 @@ struct Header_field_t {
 struct Http_response_t {
     int status_code;
     struct Header_field_t *headers;
-    char msg_body[1024];
-    long msg_body_size;
+    char filepath[sizeof(SERVER_ROOT) + URI_SIZE_MAX];
+    size_t filesize;
 };
 
 void send_http_response(struct Http_response_t *http_resp, int sockfd);
