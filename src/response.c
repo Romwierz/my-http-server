@@ -102,6 +102,22 @@ void add_response_header(struct Http_response_t *http_resp, const char *name, co
     }
 }
 
+const char *get_response_header_value(struct Http_response_t *http_resp, const char *name)
+{
+    struct Header_field_t *node = http_resp->headers;
+
+    while (node != NULL) {
+        if (strcmp(node->name, name) == 0)
+            break;
+        node = node->next;
+    }
+
+    if (node == NULL)
+        return NULL;
+        
+    return node->value;
+}
+
 void free_response(struct Http_response_t *http_resp)
 {
     struct Header_field_t *header_current = http_resp->headers;

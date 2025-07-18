@@ -16,6 +16,7 @@ struct Http_response_t {
 
 void send_http_response(struct Http_response_t *http_resp, int sockfd);
 void add_response_header(struct Http_response_t *http_resp, const char *name, const char *value);
+const char *get_response_header_value(struct Http_response_t *http_resp, const char *name);
 void free_response(struct Http_response_t *http_resp);
 
 #endif
