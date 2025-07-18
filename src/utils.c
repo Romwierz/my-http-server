@@ -67,6 +67,17 @@ bool is_file(const char *path)
         return false;
 }
 
+size_t get_file_size(const char *path)
+{
+    struct stat statbuf;
+    if (stat(path, &statbuf) == -1) {
+        perror("stat");
+        return 0;
+    }
+
+    return statbuf.st_size;
+}
+
 // prevent accessing server root's parent directory
 bool is_within_root(const char *path)
 {

@@ -16,6 +16,7 @@ void parse_args(int argc, char *argv[]);
 void remove_trailing_newline(char *str, size_t max_len);
 char *remove_leading_whitespaces(char *str);
 bool is_file(const char *path);
+size_t get_file_size(const char *path);
 bool is_within_root(const char *path);
 void convert_uri_to_path(char *uri, char *path);
 
