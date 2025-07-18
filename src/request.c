@@ -18,12 +18,12 @@ struct Http_method_map_entry {
     const char *name;
     enum Http_method_t type;
 } const http_method_map[] = {
-    { "GET", GET },
-    { "HEAD", HEAD },
-    { "POST", POST },
-    { "PUT", PUT },
+    { "GET",    GET },
+    { "HEAD",   HEAD },
+    { "POST",   POST },
+    { "PUT",    PUT },
     { "DELETE", DELETE },
-    { 0, INVALID }
+    { 0,        INVALID }
 };
 
 struct Http_request_t {
@@ -153,11 +153,6 @@ void handle_request(const char *request_raw, int sockfd)
         http_resp.status_code = 501;
         break;
     }
-
-    add_response_header(&http_resp, "Test-header", "jeden");
-    add_response_header(&http_resp, "Test-header", "dwa");
-    add_response_header(&http_resp, "Test-header", "jeden");
-    add_response_header(&http_resp, "Test-header", "dwa");
 
     send_http_response(&http_resp, sockfd);
     free_response(&http_resp);

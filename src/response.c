@@ -5,6 +5,17 @@
 #include "messages.h"
 #include "mime.h"
 
+static const char *get_status_line(int status_code)
+{
+    const struct http_status_t *http_status;
+
+    for (http_status = http_status_map; http_status->code != 0; http_status++)
+        if (http_status->code == status_code)
+            break;
+
+    return http_status->line;
+}
+
 static void send_headers(struct Header_field_t *headers, int sockfd)
 {
     while (headers != NULL) {
@@ -50,39 +61,10 @@ static void send_file(const char *filepath, size_t filesize, int sockfd)
 
 void send_http_response(struct Http_response_t *http_resp, int sockfd)
 {
-    printf("HTTP response %d sent to client fd%d\n", http_resp->status_code, sockfd);
-    printf("Data sent:\n");
+    const char *status_line = get_status_line(http_resp->status_code);
+    printf("Data sent:\n%s", status_line);
 
-    // TODO:
-    // get rid of switch cases by just writing status line string
-    // into http_resp struct earlier in the program
-    switch (http_resp->status_code)
-    {
-    case 200:
-        socket_transmit(sockfd, HTTP_STATUS_200, strlen(HTTP_STATUS_200));
-        break;
-    case 400:
-        socket_transmit(sockfd, HTTP_STATUS_400, strlen(HTTP_STATUS_400));
-        break;
-    case 403:
-        socket_transmit(sockfd, HTTP_STATUS_403, strlen(HTTP_STATUS_403));
-        break;
-    case 404:
-        socket_transmit(sockfd, HTTP_STATUS_404, strlen(HTTP_STATUS_404));
-        break;
-    case 413:
-        socket_transmit(sockfd, HTTP_STATUS_413, strlen(HTTP_STATUS_413));
-        break;
-    case 414:
-        socket_transmit(sockfd, HTTP_STATUS_414, strlen(HTTP_STATUS_414));
-        break;
-    case 501:
-        socket_transmit(sockfd, HTTP_STATUS_501, strlen(HTTP_STATUS_501));
-        break;
-    default:
-        break;
-    }
-
+    socket_transmit(sockfd, status_line, strlen(status_line));
     send_headers(http_resp->headers, sockfd);
     socket_transmit(sockfd, CRLF, strlen(CRLF));
     send_file(http_resp->filepath, http_resp->filesize, sockfd);

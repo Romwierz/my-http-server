@@ -16,6 +16,20 @@
 #define HTTP_STATUS_414 "HTTP/1.0 414 URI Too Long\r\n"
 #define HTTP_STATUS_501 "HTTP/1.0 501 Not Implemented\r\n"
 
+static struct http_status_t {
+    const int code;
+    const char *line;
+} const http_status_map[] = {
+    { 200, HTTP_STATUS_200 },
+    { 400, HTTP_STATUS_400 },
+    { 403, HTTP_STATUS_403 },
+    { 404, HTTP_STATUS_404 },
+    { 413, HTTP_STATUS_413 },
+    { 414, HTTP_STATUS_414 },
+    { 501, HTTP_STATUS_501 },
+    { 0, 0 }
+};
+
 struct Header_field_t {
     struct Header_field_t *next;
     const char *name;
