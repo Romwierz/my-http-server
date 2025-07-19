@@ -49,7 +49,7 @@ static void send_file(const char *filepath, size_t filesize, int sockfd)
     while (bytes_to_read > 0)
     {
         data_size = bytes_to_read > sizeof(send_buf) ? sizeof(send_buf) : bytes_to_read;
-        bytes_to_read -= fread(send_buf, sizeof(char), sizeof(send_buf), fp);
+        bytes_to_read -= fread(send_buf, sizeof(char), data_size, fp);
         if (socket_transmit(sockfd, send_buf, data_size) != data_size)
             continue; // TODO: handle error
     }
