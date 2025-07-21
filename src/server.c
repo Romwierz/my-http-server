@@ -16,7 +16,7 @@
 
 bool kill_server = false;
 
-int my_sock_init(struct sockaddr_in *my_addr)
+static int my_sock_init(struct sockaddr_in *my_addr)
 {
     int my_sockfd;
     if ((my_sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
