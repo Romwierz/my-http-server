@@ -2,9 +2,22 @@
 #define UTILS_H
 
 #include <stdbool.h>
+#if defined(_WIN32)
+    #include <winsock2.h>
+    #define handle_error(msg) \
+        do { \
+            fprintf(stderr, "%s: error code %d\n", msg, WSAGetLastError()); \
+            WSACleanup(); \
+            exit(EXIT_FAILURE); \
+        } while (0)
+#else
+    #define handle_error(msg) \
+        do { perror(msg); exit(EXIT_FAILURE); } while (0)
+#endif
+
+
 
 #define PRINT_USAGE() fprintf(stderr, "Usage: %s [-p port]\n", argv[0])
-#define handle_error(msg) do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"

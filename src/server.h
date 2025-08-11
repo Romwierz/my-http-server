@@ -2,7 +2,13 @@
 #define SERVER_H
 
 #include <stdbool.h>
-#include <netinet/in.h>
+
+#if defined(_WIN32)
+    #include <winsock2.h>
+    #define close closesocket
+#else
+    #include <netinet/in.h>
+#endif
 
 extern bool kill_server;
 

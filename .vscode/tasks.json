@@ -3,7 +3,7 @@
         {
             "type": "cppbuild",
             "label": "Build my-http",
-            "command": "make",
+            "command": "mingw32-make",
             "args": [],
             "options": {
                 "cwd": "${workspaceFolder}"

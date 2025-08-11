@@ -3,8 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/usr/include/x86_64-linux-gnu"
+                "${workspaceFolder}/**"
             ],
             "compilerPath": "/usr/bin/gcc",
             "defines": [],
@@ -12,6 +11,22 @@
             "cppStandard": "gnu++17",
             "intelliSenseMode": "linux-gcc-x86",
             "configurationProvider": "ms-vscode.makefile-tools"
+        },
+
+        {
+            "name" : "Windows",
+            "includePath": [
+                "${workspaceFolder}/**"
+                
+            ],
+            "compilerPath": "gcc",
+            "defines": [],
+            "cStandard" : "gnu11",  //sa klopoty z gnu17 //TODO
+            "cppStandard" : "gnu++11",
+            "intelliSenseMode": "${default}",
+            "configurationProvider": "ms-vscode.makefile-tools"
+
+
         }
     ],
     "version": 4

@@ -1,8 +1,14 @@
+
+#if defined(_WIN32)
+    #include <winsock2.h>
+#else
+    #include <unistd.h>
+    #include <netinet/in.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <netinet/in.h>
 #include <errno.h>
 
 #include "server.h"
@@ -19,6 +25,20 @@ bool kill_server = false;
 static int my_sock_init(struct sockaddr_in *my_addr)
 {
     int my_sockfd;
+    #if defined(_WIN32)
+        WSADATA windows_socket_details;
+        if (WSAStartup( MAKEWORD(2,2), &windows_socket_details) !=0) 
+        {
+            fprintf(stderr, "Winsock initialization failed: %d", WSAGetLastError());
+            WSACleanup();
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            printf("Winsock version %d.%d initialized\n", 
+            LOBYTE(windows_socket_details.wVersion), HIBYTE(windows_socket_details.wVersion));
+        }
+    #endif
     if ((my_sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
         handle_error("socket");
     printf("Socket created: fd%d\n\n", my_sockfd);
@@ -28,7 +48,11 @@ static int my_sock_init(struct sockaddr_in *my_addr)
 
     my_addr->sin_family = AF_INET;
     my_addr->sin_port = htons(MY_PORT);
-    my_addr->sin_addr.s_addr = INADDR_ANY;
+    #if defined(_WIN32)
+        my_addr->sin_addr.S_un.S_addr = INADDR_ANY;
+    #else
+        my_addr->sin_addr.s_addr = INADDR_ANY;
+    #endif
     memset(my_addr->sin_zero, '\0', sizeof my_addr->sin_zero);
 
     if (bind(my_sockfd, (struct sockaddr *)my_addr, sizeof(*my_addr)) == -1)
@@ -47,7 +71,11 @@ void do_server_things(void)
 
     int my_sockfd, client_sockfd;
     struct sockaddr_in my_addr, client_addr;
-    socklen_t addr_size;
+    #if defined(_WIN32)
+        int addr_size;
+    #else
+        socklen_t addr_size;
+    #endif
 
     my_sockfd = my_sock_init(&my_addr);
 

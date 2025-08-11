@@ -1,5 +1,7 @@
 CC = gcc
-CFLAGS = -MMD -g -std=gnu17 -fdiagnostics-color=always
+STD := $(shell $(CC) -std=gnu17 -E - < /dev/null > /dev/null 2>&1 && echo gnu17 || echo gnu11)
+
+CFLAGS = -MMD -g -std=$(STD) -fdiagnostics-color=always
 # Warnings
 CFLAGS += -Wall -Wextra -Wpedantic \
           -Wformat=2 -Wno-unused-parameter -Wshadow \
@@ -17,19 +19,18 @@ DEP := $(OBJ:.o=.d)
 all: $(APP)
 
 $(APP): $(OBJ)
-	$(CC) $^ $(CFLAGS) -o $@
+	$(CC) $^ $(CFLAGS) -o $@ -lws2_32
 
 %.o: %.c
 	$(CC) $< -c $(CFLAGS) -o $@
 
 asan:
 	$(MAKE) CFLAGS="$(CFLAGS) -fsanitize=address -fno-omit-frame-pointer"
- 
+
 clean:
 	rm -f $(APP) $(OBJ) $(DEP)
 
 .PHONY: all clean asan
-
 .DELETE_ON_ERROR:
 
 -include $(DEP)
