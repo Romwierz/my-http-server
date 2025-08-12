@@ -1,5 +1,6 @@
 *.o
 *.d
+my-http.exe
 my-http
 nob
 nob.old

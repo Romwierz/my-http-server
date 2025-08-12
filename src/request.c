@@ -11,7 +11,7 @@
 #include "mime.h"
 
 enum Http_method_t {
-    INVALID, GET, HEAD, POST, PUT, DELETE
+    INVALID, GET, HEAD, POST, PUT, HTTP_DELETE 
 };
 
 struct Http_method_map_entry {
